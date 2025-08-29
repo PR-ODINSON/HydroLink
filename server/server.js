@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 3001;
 // Start the server and listen on the specified port
 const server = app.listen(PORT, () => {
   console.log(`Server is running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`Server URL: http://localhost:${PORT}`);
 });
 
 // Optional: Handle unhandled promise rejections for better error handling
@@ -16,4 +17,13 @@ process.on('unhandledRejection', (err, promise) => {
   console.error(`Error: ${err.message}`);
   // Close server & exit process
   server.close(() => process.exit(1));
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Please try a different port.`);
+  } else {
+    console.error('Server error:', error);
+  }
 });
