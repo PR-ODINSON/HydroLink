@@ -17,21 +17,20 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+    minlength: 6,
   },
   role: {
     type: String,
     enum: ['Producer', 'Certifier', 'Buyer'],
     required: true,
   },
-  // We will need the producer's wallet address to mint credits to them
   walletAddress: {
-      type: String,
-      // Not required for all roles, but crucial for producers
-      default: null, 
+    type: String,
+    default: null,
   }
 }, { timestamps: true });
 
-// Hash password before saving the user model
+// Hash password before saving
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
@@ -41,7 +40,7 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
-// Method to compare entered password with hashed password in DB
+// Compare password method
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

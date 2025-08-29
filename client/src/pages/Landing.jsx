@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import Tilt from 'react-parallax-tilt';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Leaf, 
   Shield, 
@@ -50,6 +51,8 @@ const Landing = () => {
     }
   };
 
+  const { isAuthenticated } = useAuth();
+  
   const features = [
     {
       icon: Shield,
@@ -186,11 +189,10 @@ const Landing = () => {
                 </button>
               ))}
               <Link 
-                to="/dashboard" 
-                className="block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg text-center font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
+                to={isAuthenticated ? "/dashboard" : "/register"} 
+                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-2 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105"
               >
-                Get Started
+                {isAuthenticated ? "Go to Dashboard" : "Get Started"}
               </Link>
             </div>
           </motion.div>
@@ -298,32 +300,14 @@ const Landing = () => {
                 Revolutionizing sustainable energy markets through blockchain-powered 
                 green hydrogen credit verification, trading, and retirement platform.
               </motion.p>
-              
-              <motion.div 
-                className="flex flex-col sm:flex-row gap-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
-              >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+              <motion.div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  to={isAuthenticated ? "/dashboard" : "/register"}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center group"
                 >
-                  <Link
-                    to="/dashboard"
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center justify-center group shadow-lg hover:shadow-xl relative overflow-hidden"
-                  >
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
-                      initial={{ x: '-100%' }}
-                      whileHover={{ x: '100%' }}
-                      transition={{ duration: 0.6 }}
-                    />
-                    <span className="relative z-10">Get Started</span>
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
-                  </Link>
-                </motion.div>
-                
+                  {isAuthenticated ? "Go to Dashboard" : "Get Started"}
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
                 <motion.button 
                   onClick={() => setShowVideoModal(true)}
                   className="border-2 border-green-500 text-green-600 px-8 py-4 rounded-xl hover:bg-green-50 transition-all duration-300 flex items-center justify-center group"
@@ -1010,7 +994,7 @@ const Landing = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link
-                  to="/dashboard"
+                  to={isAuthenticated ? "/dashboard" : "/register"}
                   className="bg-white text-green-600 px-8 py-4 rounded-xl hover:bg-gray-50 transition-all duration-300 inline-flex items-center group font-semibold shadow-lg hover:shadow-xl relative overflow-hidden"
                 >
                   {/* Pulse animation */}
@@ -1035,7 +1019,7 @@ const Landing = () => {
                     transition={{ duration: 0.6 }}
                   />
                   
-                  <span className="relative z-10">Get Started Now</span>
+                  <span className="relative z-10">{isAuthenticated ? "Go to Dashboard" : "Get Started Now"}</span>
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
                 </Link>
               </motion.div>
