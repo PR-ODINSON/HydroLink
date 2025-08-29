@@ -105,15 +105,12 @@ const Landing = () => {
 
   // Enhanced Navigation Component
   const Navigation = () => (
-    <motion.nav 
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+    <nav 
+      className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out ${
         isScrolled 
-          ? 'bg-white/95 backdrop-blur-lg border-b border-green-100 shadow-lg' 
-          : 'bg-white/80 backdrop-blur-lg border-b border-green-100'
+          ? 'bg-white/95 backdrop-blur-xl border-b border-green-100 shadow-lg transform translate-y-0' 
+          : 'bg-white/80 backdrop-blur-lg border-b border-green-100/50'
       } ${isDarkMode ? 'dark:bg-gray-900/95 dark:border-gray-700' : ''}`}
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -199,7 +196,7 @@ const Landing = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.nav>
+    </nav>
   );
 
   // Video Modal Component
@@ -602,15 +599,14 @@ const Landing = () => {
               className="relative"
               style={{ y: y2 }}
             >
-              <div className="grid grid-cols-2 gap-4">
-                <motion.div 
-                  className="space-y-4"
+              <motion.div 
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                   variants={{
                     hidden: { opacity: 0 },
                     show: {
                       opacity: 1,
                       transition: {
-                        staggerChildren: 0.2
+                        staggerChildren: 0.15
                       }
                     }
                   }}
@@ -619,73 +615,315 @@ const Landing = () => {
                   viewport={{ once: true }}
                 >
                   {[
-                    { icon: Users, color: "green", title: "500+ Producers", desc: "Active hydrogen producers worldwide" },
-                    { icon: TrendingUp, color: "blue", title: "$2.5M+ Volume", desc: "Total credits traded on platform" }
-                  ].map((item, index) => (
-                    <motion.div
-                      key={index}
-                      variants={{
-                        hidden: { opacity: 0, y: 20 },
-                        show: { opacity: 1, y: 0 }
-                      }}
-                      className={`bg-white rounded-2xl p-6 shadow-lg border border-${item.color}-100 group hover:shadow-xl hover:-translate-y-2 transition-all duration-300`}
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <motion.div
-                        whileHover={{ rotate: 360, scale: 1.1 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <item.icon className={`w-8 h-8 text-${item.color}-500 mb-3`} />
-                      </motion.div>
-                      <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                      <p className="text-sm text-gray-600">{item.desc}</p>
-                    </motion.div>
-                  ))}
-                </motion.div>
-                
-                <motion.div 
-                  className="space-y-4 mt-8"
-                  variants={{
-                    hidden: { opacity: 0 },
-                    show: {
-                      opacity: 1,
-                      transition: {
-                        staggerChildren: 0.2,
-                        delayChildren: 0.3
-                      }
+                    { 
+                      icon: Users, 
+                      color: "green", 
+                      title: "500+ Producers", 
+                      desc: "Active hydrogen producers worldwide",
+                      bgGradient: "from-green-50 to-emerald-50",
+                      iconBg: "from-green-500 to-emerald-600"
+                    },
+                    { 
+                      icon: TrendingUp, 
+                      color: "blue", 
+                      title: "$2.5M+ Volume", 
+                      desc: "Total credits traded on platform",
+                      bgGradient: "from-blue-50 to-cyan-50",
+                      iconBg: "from-blue-500 to-cyan-600"
+                    },
+                    { 
+                      icon: Shield, 
+                      color: "purple", 
+                      title: "99.9% Secure", 
+                      desc: "Blockchain-verified transactions",
+                      bgGradient: "from-purple-50 to-violet-50",
+                      iconBg: "from-purple-500 to-violet-600"
+                    },
+                    { 
+                      icon: Zap, 
+                      color: "orange", 
+                      title: "Instant Verify", 
+                      desc: "Real-time credit validation",
+                      bgGradient: "from-orange-50 to-amber-50",
+                      iconBg: "from-orange-500 to-amber-600"
                     }
-                  }}
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true }}
-                >
-                  {[
-                    { icon: Shield, color: "purple", title: "99.9% Secure", desc: "Blockchain-verified transactions" },
-                    { icon: Zap, color: "orange", title: "Instant Verify", desc: "Real-time credit validation" }
                   ].map((item, index) => (
                     <motion.div
                       key={index}
                       variants={{
-                        hidden: { opacity: 0, y: 20 },
-                        show: { opacity: 1, y: 0 }
+                        hidden: { opacity: 0, y: 20, scale: 0.9 },
+                        show: { opacity: 1, y: 0, scale: 1 }
                       }}
-                      className={`bg-white rounded-2xl p-6 shadow-lg border border-${item.color}-100 group hover:shadow-xl hover:-translate-y-2 transition-all duration-300`}
-                      whileHover={{ scale: 1.02 }}
+                      className={`bg-gradient-to-br ${item.bgGradient} rounded-2xl p-6 shadow-lg border border-white/50 group hover:shadow-xl hover:-translate-y-3 transition-all duration-500 relative overflow-hidden h-full flex flex-col`}
+                      whileHover={{ scale: 1.03, rotateY: 5 }}
+                      style={{ transformStyle: 'preserve-3d' }}
                     >
+                      {/* Animated background glow */}
                       <motion.div
-                        whileHover={{ rotate: 360, scale: 1.1 }}
-                        transition={{ duration: 0.5 }}
+                        className={`absolute inset-0 bg-gradient-to-br ${item.iconBg} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+                        initial={{ scale: 0, rotate: 180 }}
+                        whileHover={{ scale: 1, rotate: 0 }}
+                        transition={{ duration: 0.6 }}
+                      />
+                      
+                      {/* Icon with enhanced styling */}
+                      <motion.div
+                        className={`w-12 h-12 bg-gradient-to-br ${item.iconBg} rounded-xl flex items-center justify-center mb-4 shadow-lg relative z-10`}
+                        whileHover={{ 
+                          rotate: [0, -10, 10, -10, 0],
+                          scale: 1.1,
+                        }}
+                        transition={{ duration: 0.6 }}
                       >
-                        <item.icon className={`w-8 h-8 text-${item.color}-500 mb-3`} />
+                        <motion.div
+                          whileHover={{ scale: 1.2 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <item.icon className="w-6 h-6 text-white" />
+                        </motion.div>
+                        
+                        {/* Pulsing ring effect */}
+                        <motion.div
+                          className={`absolute inset-0 bg-gradient-to-br ${item.iconBg} rounded-xl opacity-30`}
+                          animate={{ 
+                            scale: [1, 1.3, 1],
+                            opacity: [0.3, 0, 0.3]
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
                       </motion.div>
-                      <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                      <p className="text-sm text-gray-600">{item.desc}</p>
+                      
+                      <div className="relative z-10 flex-grow">
+                        <motion.h3 
+                          className="font-bold text-gray-900 mb-2 text-lg"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          {item.title}
+                        </motion.h3>
+                        <p className="text-sm text-gray-700 leading-relaxed">{item.desc}</p>
+                      </div>
+                      
+                      {/* Decorative corner element */}
+                      <motion.div
+                        className={`absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl ${item.iconBg} opacity-10 rounded-bl-full`}
+                        initial={{ scale: 0, rotate: 90 }}
+                        whileInView={{ scale: 1, rotate: 0 }}
+                        transition={{ duration: 0.8, delay: index * 0.1 }}
+                      />
                     </motion.div>
                   ))}
-                </motion.div>
-              </div>
+              </motion.div>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-24 bg-white relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-r from-green-50/30 via-transparent to-blue-50/30"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Trusted by Industry Leaders
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              See what our partners and users say about the future of green hydrogen credits.
+            </p>
+          </motion.div>
+
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.2
+                }
+              }
+            }}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+          >
+            {[
+              {
+                quote: "HydroLink has revolutionized how we track and trade our green hydrogen credits. The transparency is unmatched.",
+                author: "Dr. Sarah Chen",
+                role: "Chief Sustainability Officer",
+                company: "GreenTech Industries",
+                avatar: "👩‍💼"
+              },
+              {
+                quote: "The AI-powered fraud detection gives us complete confidence in every transaction. This is the future of clean energy markets.",
+                author: "Michael Rodriguez",
+                role: "Director of Operations", 
+                company: "CleanPower Corp",
+                avatar: "👨‍💼"
+              },
+              {
+                quote: "Real-time verification and instant transfers have streamlined our entire carbon offset program. Outstanding platform!",
+                author: "Emma Thompson",
+                role: "Environmental Manager",
+                company: "EcoSolutions Ltd",
+                avatar: "👩‍🔬"
+              }
+            ].map((testimonial, index) => (
+              <motion.div
+                key={index}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0 }
+                }}
+                className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-500 relative group"
+                whileHover={{ y: -5, scale: 1.02 }}
+              >
+                {/* Quote decoration */}
+                <div className="absolute top-4 left-4 text-6xl text-green-100 font-serif">"</div>
+                
+                <div className="relative z-10">
+                  <p className="text-gray-700 leading-relaxed mb-6 italic">
+                    {testimonial.quote}
+                  </p>
+                  
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center text-white text-xl">
+                      {testimonial.avatar}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{testimonial.author}</h4>
+                      <p className="text-sm text-gray-600">{testimonial.role}</p>
+                      <p className="text-sm text-green-600 font-medium">{testimonial.company}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Hover glow effect */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-green-400/5 to-emerald-400/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  initial={{ scale: 0.8 }}
+                  whileHover={{ scale: 1 }}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Stats Counter Section */}
+      <section className="py-24 bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0">
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-64 h-64 bg-white/5 rounded-full blur-3xl"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                x: [0, 50, 0],
+                y: [0, -30, 0],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 10 + i * 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 2
+              }}
+            />
+          ))}
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Platform Impact
+            </h2>
+            <p className="text-xl text-green-100">
+              Real numbers, real impact on our sustainable future
+            </p>
+          </motion.div>
+
+          <motion.div 
+            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.2
+                }
+              }
+            }}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+          >
+            {[
+              { value: 25000, suffix: "+", label: "Credits Issued", icon: "🏭" },
+              { value: 850, suffix: "+", label: "Active Users", icon: "👥" },
+              { value: 99.8, suffix: "%", label: "Accuracy Rate", icon: "🎯" },
+              { value: 5.2, suffix: "M", label: "CO₂ Offset (tons)", icon: "🌱" }
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0 }
+                }}
+                className="text-center group"
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div 
+                  className="text-4xl mb-2"
+                  animate={{ 
+                    rotate: [0, 10, -10, 0],
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: index * 0.5
+                  }}
+                >
+                  {stat.icon}
+                </motion.div>
+                <div className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  <CountUp
+                    end={stat.value}
+                    duration={3}
+                    delay={0.5 + index * 0.2}
+                    preserveValue
+                    decimals={stat.suffix === '%' ? 1 : 0}
+                  />
+                  <span>{stat.suffix}</span>
+                </div>
+                <p className="text-green-100 font-medium">{stat.label}</p>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
