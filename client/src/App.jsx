@@ -8,12 +8,30 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
+import RoleBasedDashboard from './pages/dashboard/RoleBasedDashboard';
 import Producer from './pages/Producer';
 import Authority from './pages/Authority';
 import Buyer from './pages/Buyer';
 import Explorer from './pages/Explorer';
 import Leaderboard from './pages/Leaderboard';
+
+// Producer-specific pages
+import Production from './pages/Production';
+import Credits from './pages/Credits';
+import Analytics from './pages/Analytics';
+import Achievements from './pages/Achievements';
+
+// Certifier-specific pages
+import Verification from './pages/Verification';
+import Requests from './pages/Requests';
+import FraudDetection from './pages/FraudDetection';
+import Reports from './pages/Reports';
+
+// Buyer-specific pages
+import Marketplace from './pages/Marketplace';
+import Portfolio from './pages/Portfolio';
+import Transactions from './pages/Transactions';
+import Sustainability from './pages/Sustainability';
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,7 +79,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={
               <ProtectedRoute>
-                <Dashboard />
+                <RoleBasedDashboard />
               </ProtectedRoute>
             } />
             <Route path="/producer" element={
@@ -87,6 +105,72 @@ function App() {
             <Route path="/leaderboard" element={
               <ProtectedRoute>
                 <Leaderboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* Producer-specific routes */}
+            <Route path="/production" element={
+              <ProtectedRoute>
+                <Production />
+              </ProtectedRoute>
+            } />
+            <Route path="/credits" element={
+              <ProtectedRoute>
+                <Credits />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute>
+                <Analytics />
+              </ProtectedRoute>
+            } />
+            <Route path="/achievements" element={
+              <ProtectedRoute>
+                <Achievements />
+              </ProtectedRoute>
+            } />
+            
+            {/* Certifier-specific routes */}
+            <Route path="/verification" element={
+              <ProtectedRoute>
+                <Verification />
+              </ProtectedRoute>
+            } />
+            <Route path="/requests" element={
+              <ProtectedRoute>
+                <Requests />
+              </ProtectedRoute>
+            } />
+            <Route path="/fraud-detection" element={
+              <ProtectedRoute>
+                <FraudDetection />
+              </ProtectedRoute>
+            } />
+            <Route path="/reports" element={
+              <ProtectedRoute>
+                <Reports />
+              </ProtectedRoute>
+            } />
+            
+            {/* Buyer-specific routes */}
+            <Route path="/marketplace" element={
+              <ProtectedRoute>
+                <Marketplace />
+              </ProtectedRoute>
+            } />
+            <Route path="/portfolio" element={
+              <ProtectedRoute>
+                <Portfolio />
+              </ProtectedRoute>
+            } />
+            <Route path="/transactions" element={
+              <ProtectedRoute>
+                <Transactions />
+              </ProtectedRoute>
+            } />
+            <Route path="/sustainability" element={
+              <ProtectedRoute>
+                <Sustainability />
               </ProtectedRoute>
             } />
           </Routes>
