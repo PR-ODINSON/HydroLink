@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
+import FadedFooterText from "../components/FadedFooterText";
+
 import Tilt from 'react-parallax-tilt';
 import Footer from '../components/Footer';
 import { 
@@ -291,49 +293,50 @@ const Landing = () => {
                 Green Hydrogen Credits
               </motion.h1>
               
-              <motion.p 
-                className="text-xl text-gray-600 mb-8 leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-              >
-                Revolutionizing sustainable energy markets through blockchain-powered 
-                green hydrogen credit verification, trading, and retirement platform.
-              </motion.p>
-              <motion.div 
-                className="flex flex-col sm:flex-row gap-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
-              >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link
-                    to="/register"
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center justify-center group shadow-lg hover:shadow-xl relative overflow-hidden"
-                  >
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
-                      initial={{ x: '-100%' }}
-                      whileHover={{ x: '100%' }}
-                      transition={{ duration: 0.6 }}
-                    />
-                    <span className="relative z-10">Get Started</span>
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
-                  </Link>
-                </motion.div>
-                <motion.button 
-                  onClick={() => setShowVideoModal(true)}
-                  className="border-2 border-green-500 text-green-600 px-8 py-4 rounded-xl hover:bg-green-50 transition-all duration-300 flex items-center justify-center group"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Play className="mr-2 w-5 h-5" />
-                  Watch Demo
-                </motion.button>
-              </motion.div>
+                             <motion.p 
+                 className="text-xl text-gray-600 mb-8 leading-relaxed"
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ duration: 0.8, delay: 0.4 }}
+               >
+                 Revolutionizing sustainable energy markets through blockchain-powered 
+                 green hydrogen credit verification, trading, and retirement platform.
+               </motion.p>
+               
+               <motion.div 
+                 className="flex flex-col sm:flex-row gap-4"
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ duration: 0.8, delay: 0.6 }}
+               >
+                 <motion.div
+                   whileHover={{ scale: 1.05 }}
+                   whileTap={{ scale: 0.95 }}
+                 >
+                   <Link
+                     to="/register"
+                     className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center justify-center group shadow-lg hover:shadow-xl relative overflow-hidden"
+                   >
+                     <motion.div
+                       className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                       initial={{ x: '-100%' }}
+                       whileHover={{ x: '100%' }}
+                       transition={{ duration: 0.6 }}
+                     />
+                     <span className="relative z-10">Get Started</span>
+                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
+                   </Link>
+                 </motion.div>
+                 <motion.button 
+                   onClick={() => setShowVideoModal(true)}
+                   className="border-2 border-green-500 text-green-600 px-8 py-4 rounded-xl hover:bg-green-50 transition-all duration-300 flex items-center justify-center group"
+                   whileHover={{ scale: 1.05 }}
+                   whileTap={{ scale: 0.95 }}
+                 >
+                   <Play className="mr-2 w-5 h-5" />
+                   Watch Demo
+                 </motion.button>
+               </motion.div>
             </motion.div>
             
             <motion.div
@@ -1042,8 +1045,13 @@ const Landing = () => {
             </motion.div>
           </motion.div>
         </div>
+        
       </section>
+      
       <Footer />
+      <FadedFooterText text="HydroLink" />
+
+      
     </div>
   );
 };

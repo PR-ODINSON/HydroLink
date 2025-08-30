@@ -3,8 +3,8 @@ import { Leaf, Github, Twitter, Linkedin, Mail } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-br from-green-50 to-emerald-50 border-t border-green-100">
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <footer className="relative bg-gradient-to-br from-green-50 to-emerald-50 border-t border-green-100 overflow-hidden">
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="col-span-1 md:col-span-2">
@@ -42,26 +42,10 @@ const Footer = () => {
               Platform
             </h3>
             <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                  Dashboard
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                  Producer Portal
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                  Credit Explorer
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                  Leaderboard
-                </a>
-              </li>
+              <li><a href="#" className="text-gray-600 hover:text-green-600 transition-colors">Dashboard</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-green-600 transition-colors">Producer Portal</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-green-600 transition-colors">Credit Explorer</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-green-600 transition-colors">Leaderboard</a></li>
             </ul>
           </div>
 
@@ -71,50 +55,31 @@ const Footer = () => {
               Support
             </h3>
             <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                  API Reference
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                  Help Center
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                  Contact Us
-                </a>
-              </li>
+              <li><a href="#" className="text-gray-600 hover:text-green-600 transition-colors">Documentation</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-green-600 transition-colors">API Reference</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-green-600 transition-colors">Help Center</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-green-600 transition-colors">Contact Us</a></li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-8 pt-8 border-t border-green-200">
+        <div className="mt-8 pt-8 border-t border-green-200 relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-500 text-sm">
               © 2024 HydroLink. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-500 hover:text-green-600 text-sm transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="text-gray-500 hover:text-green-600 text-sm transition-colors">
-                Terms of Service
-              </a>
-              <a href="#" className="text-gray-500 hover:text-green-600 text-sm transition-colors">
-                Cookie Policy
-              </a>
+              <a href="#" className="text-gray-500 hover:text-green-600 text-sm transition-colors">Privacy Policy</a>
+              <a href="#" className="text-gray-500 hover:text-green-600 text-sm transition-colors">Terms of Service</a>
+              <a href="#" className="text-gray-500 hover:text-green-600 text-sm transition-colors">Cookie Policy</a>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Faded Enlarged Text - Spanning full width */}
+      
     </footer>
   );
 };
