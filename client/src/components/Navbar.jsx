@@ -15,23 +15,6 @@ const Navbar = ({ onMenuClick }) => {
   
   const isActive = (path) => location.pathname === path;
 
-  // Fetch notifications
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    fetch('/api/notifications', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) setNotifications(data.data);
-      });
-  }, [isAuthenticated]);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAsRead = async (id) => {
-    await fetch(`/api/notifications/${id}/read`, { method: 'PATCH', credentials: 'include' });
-    setNotifications(notifications => notifications.map(n => n._id === id ? { ...n, read: true } : n));
-  };
-
   // Scroll-based section highlighting for landing page
   useEffect(() => {
     if (!isActive('/')) return;
@@ -82,14 +65,21 @@ const Navbar = ({ onMenuClick }) => {
     if (isAuthenticated && user) {
       const fetchNotificationCount = async () => {
         try {
-          const response = await fetch('/api/notifications/count', {
+          // Determine the correct endpoint based on user role
+          let endpoint = '/api/producer/notifications';
+          if (user?.role === 'Certifier') {
+            endpoint = '/api/certifier/notifications';
+          } else if (user?.role === 'Buyer') {
+            endpoint = '/api/buyer/notifications';
+          }
+          
+          const response = await fetch(endpoint, {
             credentials: 'include'
           });
           if (response.ok) {
             const data = await response.json();
-            if (data.success) {
-              setUnreadCount(data.data.unreadCount);
-            }
+            const unreadCount = data.data?.filter(n => !n.read).length || 0;
+            setUnreadCount(unreadCount);
           }
         } catch (error) {
           console.error('Error fetching notification count:', error);

@@ -30,7 +30,16 @@ const NotificationCenter = ({ isOpen, onClose }) => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/notifications?limit=20', {
+      
+      // Determine the correct endpoint based on user role
+      let endpoint = '/api/producer/notifications';
+      if (user?.role === 'Certifier') {
+        endpoint = '/api/certifier/notifications';
+      } else if (user?.role === 'Buyer') {
+        endpoint = '/api/buyer/notifications';
+      }
+      
+      const response = await fetch(endpoint, {
         credentials: 'include'
       });
 
@@ -42,7 +51,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
       
       if (data.success) {
         setNotifications(data.data || []);
-        setUnreadCount(data.data.filter(n => n.status === 'Unread').length);
+        setUnreadCount(data.data.filter(n => !n.read).length);
       } else {
         throw new Error(data.message || 'Failed to fetch notifications');
       }
@@ -56,8 +65,16 @@ const NotificationCenter = ({ isOpen, onClose }) => {
 
   const markAsRead = async (notificationId) => {
     try {
-      const response = await fetch(`/api/notifications/${notificationId}/read`, {
-        method: 'PUT',
+      // Determine the correct endpoint based on user role
+      let endpoint = `/api/producer/notifications/${notificationId}/read`;
+      if (user?.role === 'Certifier') {
+        endpoint = `/api/certifier/notifications/${notificationId}/read`;
+      } else if (user?.role === 'Buyer') {
+        endpoint = `/api/buyer/notifications/${notificationId}/read`;
+      }
+      
+      const response = await fetch(endpoint, {
+        method: 'PATCH',
         credentials: 'include'
       });
 
@@ -65,7 +82,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
         setNotifications(prev => 
           prev.map(n => 
             n._id === notificationId 
-              ? { ...n, status: 'Read', readAt: new Date() }
+              ? { ...n, read: true, readAt: new Date() }
               : n
           )
         );
@@ -79,25 +96,29 @@ const NotificationCenter = ({ isOpen, onClose }) => {
   const markAllAsRead = async () => {
     try {
       const unreadIds = notifications
-        .filter(n => n.status === 'Unread')
+        .filter(n => !n.read)
         .map(n => n._id);
 
       if (unreadIds.length === 0) return;
 
-      const response = await fetch('/api/notifications/read', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ notificationIds: unreadIds })
+      // Determine the correct endpoint based on user role
+      let endpoint = '/api/producer/notifications/read-all';
+      if (user?.role === 'Certifier') {
+        endpoint = '/api/certifier/notifications/read-all';
+      } else if (user?.role === 'Buyer') {
+        endpoint = '/api/buyer/notifications/read-all';
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'PATCH',
+        credentials: 'include'
       });
 
       if (response.ok) {
         setNotifications(prev => 
           prev.map(n => 
-            n.status === 'Unread' 
-              ? { ...n, status: 'Read', readAt: new Date() }
+            !n.read 
+              ? { ...n, read: true, readAt: new Date() }
               : n
           )
         );
@@ -110,14 +131,16 @@ const NotificationCenter = ({ isOpen, onClose }) => {
 
   const getNotificationIcon = (type) => {
     switch (type) {
-      case 'credit_request_approved':
+      case 'request_approved':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'credit_request_rejected':
+      case 'request_rejected':
         return <AlertCircle className="w-5 h-5 text-red-500" />;
-      case 'credit_request_submitted':
+      case 'request_submitted':
         return <Info className="w-5 h-5 text-blue-500" />;
-      case 'credit_request_assigned':
+      case 'request_assigned':
         return <Bell className="w-5 h-5 text-yellow-500" />;
+      case 'credit_minted':
+        return <CheckCircle className="w-5 h-5 text-blue-500" />;
       default:
         return <Info className="w-5 h-5 text-gray-500" />;
     }
@@ -204,10 +227,10 @@ const NotificationCenter = ({ isOpen, onClose }) => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      notification.status === 'Unread' ? 'bg-blue-50' : ''
+                      !notification.read ? 'bg-blue-50' : ''
                     }`}
                     onClick={() => {
-                      if (notification.status === 'Unread') {
+                      if (!notification.read) {
                         markAsRead(notification._id);
                       }
                     }}
@@ -219,7 +242,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <p className={`text-sm font-medium ${
-                            notification.status === 'Unread' ? 'text-gray-900' : 'text-gray-700'
+                            !notification.read ? 'text-gray-900' : 'text-gray-700'
                           }`}>
                             {notification.title}
                           </p>
@@ -230,31 +253,20 @@ const NotificationCenter = ({ isOpen, onClose }) => {
                         <p className="text-sm text-gray-600 mt-1">
                           {notification.message}
                         </p>
-                        {notification.content && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {notification.content}
-                          </p>
+                        {notification.metadata?.tokenId && (
+                          <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            🪙 Token ID: {notification.metadata.tokenId}
+                          </div>
                         )}
-                        {notification.actions && notification.actions.length > 0 && (
-                          <div className="mt-2 flex gap-2">
-                            {notification.actions.map((action, index) => (
-                              <button
-                                key={index}
-                                className={`text-xs px-2 py-1 rounded ${
-                                  action.style === 'primary' 
-                                    ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                                    : action.style === 'success'
-                                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                                }`}
-                              >
-                                {action.label}
-                              </button>
-                            ))}
+                        {notification.actionUrl && (
+                          <div className="mt-2">
+                            <button className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200">
+                              {notification.actionText || 'View Details'}
+                            </button>
                           </div>
                         )}
                       </div>
-                      {notification.status === 'Unread' && (
+                      {!notification.read && (
                         <div className="flex-shrink-0 ml-2">
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         </div>

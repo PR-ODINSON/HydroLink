@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, FileText, Loader2, AlertCircle, Eye, Users } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, FileText, Loader2, AlertCircle, Eye, Users, Bell, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const CertifierDashboard = () => {
   const { user } = useAuth();
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [processingRequest, setProcessingRequest] = useState(null);
@@ -22,6 +23,17 @@ const CertifierDashboard = () => {
         const data = await response.json();
         if (data.success) {
             setPendingRequests(data.data || []);
+          }
+        }
+
+        // Fetch notifications
+        const notificationsResponse = await fetch('/api/certifier/notifications', {
+          credentials: 'include'
+        });
+        if (notificationsResponse.ok) {
+          const notificationsData = await notificationsResponse.json();
+          if (notificationsData.success) {
+            setNotifications(notificationsData.data || []);
           }
         }
       } catch (error) {
@@ -197,7 +209,7 @@ const CertifierDashboard = () => {
                           {/* Request Header */}
                           <div className="flex items-center mb-3">
                             <span className="text-lg font-medium text-gray-900 mr-3">
-                              {request.requestId}
+                              {request.creditId || request.requestId || 'N/A'}
                   </span>
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                               <Clock className="w-3 h-3 mr-1" />
@@ -232,7 +244,7 @@ const CertifierDashboard = () => {
                 <div>
                               <p className="text-sm text-gray-600">Submitted</p>
                               <p className="text-lg font-semibold text-gray-900">
-                                {new Date(request.audit.submittedAt).toLocaleDateString()}
+                                {new Date(request.createdAt || request.audit?.submittedAt || Date.now()).toLocaleDateString()}
                               </p>
                 </div>
               </div>

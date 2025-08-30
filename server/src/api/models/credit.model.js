@@ -5,7 +5,6 @@ const CreditSchema = new mongoose.Schema({
   creditId: {
     type: String,
     unique: true,
-    required: true,
     index: true
   },
   // The ID of the token on the blockchain, added after minting
@@ -92,11 +91,24 @@ const CreditSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ['Pending', 'Certified', 'Retired', 'Rejected', 'Suspended'],
-      message: 'Status must be Pending, Certified, Retired, Rejected, or Suspended'
+      values: ['Pending', 'Under Review', 'Certified', 'Retired', 'Rejected', 'Suspended'],
+      message: 'Status must be Pending, Under Review, Certified, Retired, Rejected, or Suspended'
     },
     default: 'Pending',
     index: true
+  },
+  assignedCertifier: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  rejectionReason: {
+    type: String,
+    maxlength: [1000, 'Rejection reason cannot exceed 1000 characters']
+  },
+  rejectedAt: {
+    type: Date,
+    default: null
   },
   certificationDate: {
     type: Date,
@@ -120,14 +132,26 @@ const CreditSchema = new mongoose.Schema({
       type: String,
       default: null
     },
+    txHash: {
+      type: String,
+      default: null
+    },
+    blockNumber: {
+      type: Number,
+      default: null
+    },
     retireTxHash: {
       type: String,
       default: null
     },
     network: {
       type: String,
-      default: 'ethereum'
+      default: 'polygon'
     }
+  },
+  blockchainError: {
+    type: String,
+    default: null
   },
   // Environmental impact data
   environmentalImpact: {
@@ -283,14 +307,11 @@ CreditSchema.statics.getCreditStats = async function() {
   };
 };
 
-// Indexes for better query performance
-CreditSchema.index({ creditId: 1 }, { unique: true });
+// Indexes for better query performance (removing duplicates)
 CreditSchema.index({ producer: 1, status: 1 });
 CreditSchema.index({ certifier: 1, status: 1 });
-CreditSchema.index({ status: 1 });
 CreditSchema.index({ productionDate: -1 });
 CreditSchema.index({ createdAt: -1 });
-CreditSchema.index({ tokenId: 1 }, { sparse: true });
 CreditSchema.index({ energySource: 1 });
 
 const Credit = mongoose.model('Credit', CreditSchema);

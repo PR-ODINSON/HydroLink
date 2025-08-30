@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, FileText, Clock, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
+import { PlusCircle, FileText, Clock, CheckCircle, XCircle, Loader2, AlertCircle, Bell } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import RequestCreditModal from '../../components/RequestCreditModal';
 
@@ -39,6 +39,8 @@ const ProducerDashboard = () => {
             setCredits(creditsData.data || []);
           }
         }
+
+
       } catch (error) {
         console.error('Error fetching data:', error);
         setError('Failed to load dashboard data');
@@ -88,7 +90,7 @@ const ProducerDashboard = () => {
         setIsModalOpen(false);
         
         // Show success message
-        alert('Credit request submitted successfully! You will be notified once a certifier reviews it.');
+        alert('Credit request submitted successfully! 🎉\n\nCertifiers have been notified and you will receive an in-app notification once your request is reviewed.');
       } else {
         throw new Error(result.message || 'Failed to submit request');
       }
@@ -117,6 +119,8 @@ const ProducerDashboard = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+
 
   if (!user) {
     return (
@@ -228,6 +232,8 @@ const ProducerDashboard = () => {
                   </div>
                 </div>
               </div>
+
+
             </div>
 
             {/* Recent Requests Section */}

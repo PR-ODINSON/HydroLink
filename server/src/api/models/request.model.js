@@ -1,45 +1,17 @@
 const mongoose = require('mongoose');
 
 const RequestSchema = new mongoose.Schema({
-<<<<<<< HEAD
   // Unique request identifier
   requestId: {
     type: String,
     unique: true,
-    required: true,
     index: true
   },
-  // The user who submitted the request
+  // The producer who submitted the request
   producer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'Producer is required'],
-    index: true
-  },
-  // The certifier who will review this request
-  assignedCertifier: {
-=======
-  // The user who produced the hydrogen (requester)
-  producer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    index: true
-  },
-  // Optionally, the certifier who will process this request
-  certifier: {
->>>>>>> f5f6c5c01a3e82df069ea30fc3675e2180d73b2c
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    default: null,
-    index: true
-  },
-<<<<<<< HEAD
-  // Request status
-  status: {
-    type: String,
-    enum: ['Pending', 'Under Review', 'Approved', 'Rejected', 'Cancelled'],
-    default: 'Pending',
     index: true
   },
   // Production details
@@ -80,277 +52,15 @@ const RequestSchema = new mongoose.Schema({
     trim: true,
     maxlength: [200, 'Facility location cannot exceed 200 characters']
   },
-  // Documentation
   proofDocumentUrl: {
     type: String,
-    required: [true, 'Proof document is required'],
+    required: [true, 'Proof document URL is required'],
     validate: {
       validator: function(v) {
-        return /^https?:\/\/.+/.test(v);
+        return /^https?:\/\/.+/.test(v) || /^ipfs:\/\/.+/.test(v);
       },
-      message: 'Proof document must be a valid URL'
+      message: 'Please enter a valid HTTP or IPFS URL'
     }
-  },
-  additionalDocuments: [{
-    name: {
-      type: String,
-      required: true
-    },
-    url: {
-      type: String,
-      required: true,
-      validate: {
-        validator: function(v) {
-          return /^https?:\/\/.+/.test(v);
-        },
-        message: 'Document URL must be valid'
-      }
-    },
-    type: {
-      type: String,
-      enum: ['Certificate', 'Report', 'Image', 'Other'],
-      default: 'Other'
-    },
-    uploadedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  // Review details
-  review: {
-    reviewedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      default: null
-    },
-    reviewedAt: {
-      type: Date,
-      default: null
-    },
-    comments: {
-      type: String,
-      maxlength: [1000, 'Comments cannot exceed 1000 characters']
-    },
-    rejectionReason: {
-      type: String,
-      enum: ['Insufficient Documentation', 'Invalid Data', 'Facility Not Certified', 'Other'],
-      default: null
-    },
-    rejectionDetails: {
-      type: String,
-      maxlength: [500, 'Rejection details cannot exceed 500 characters']
-    }
-  },
-  // Notification tracking
-  notifications: {
-    certifierNotified: {
-      type: Boolean,
-      default: false
-    },
-    producerNotified: {
-      type: Boolean,
-      default: false
-    },
-    lastNotificationSent: {
-      type: Date,
-      default: null
-    }
-  },
-  // Metadata
-  metadata: {
-    priority: {
-      type: String,
-      enum: ['Low', 'Normal', 'High', 'Urgent'],
-      default: 'Normal'
-    },
-    tags: [String],
-    estimatedReviewTime: {
-      type: Number, // in hours
-      default: 24
-    },
-    source: {
-      type: String,
-      enum: ['Web Portal', 'API', 'Mobile App', 'Bulk Upload'],
-      default: 'Web Portal'
-    }
-  },
-  // Audit trail
-  audit: {
-    submittedAt: {
-      type: Date,
-      default: Date.now
-    },
-    lastModified: {
-      type: Date,
-      default: Date.now
-    },
-    modifiedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      default: null
-    },
-    version: {
-      type: Number,
-      default: 1
-    }
-  }
-}, { 
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
-
-// Indexes for better query performance
-RequestSchema.index({ producer: 1, status: 1 });
-RequestSchema.index({ assignedCertifier: 1, status: 1 });
-RequestSchema.index({ status: 1, 'audit.submittedAt': -1 });
-RequestSchema.index({ 'metadata.priority': 1, status: 1 });
-
-// Virtual for request age
-RequestSchema.virtual('ageInHours').get(function() {
-  return Math.floor((Date.now() - this.audit.submittedAt) / (1000 * 60 * 60));
-});
-
-// Virtual for isOverdue
-RequestSchema.virtual('isOverdue').get(function() {
-  return this.status === 'Pending' && this.ageInHours > this.metadata.estimatedReviewTime;
-});
-
-// Pre-save middleware to update lastModified
-RequestSchema.pre('save', function(next) {
-  this.audit.lastModified = new Date();
-  this.audit.version += 1;
-  next();
-});
-
-// Static method to generate unique request ID
-RequestSchema.statics.generateRequestId = function() {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substr(2, 5);
-  return `REQ-${timestamp}-${random}`.toUpperCase();
-};
-
-// Static method to get requests by status
-RequestSchema.statics.getByStatus = function(status, limit = 50, skip = 0) {
-  return this.find({ status })
-    .populate('producer', 'name email role')
-    .populate('assignedCertifier', 'name email')
-    .populate('review.reviewedBy', 'name email')
-    .sort({ 'audit.submittedAt': -1 })
-    .limit(limit)
-    .skip(skip);
-};
-
-// Static method to get overdue requests
-RequestSchema.statics.getOverdueRequests = function() {
-  return this.find({
-    status: 'Pending',
-    $expr: {
-      $gt: [
-        { $divide: [{ $subtract: [new Date(), '$audit.submittedAt'] }, 1000 * 60 * 60] },
-        '$metadata.estimatedReviewTime'
-      ]
-    }
-  })
-  .populate('producer', 'name email')
-  .populate('assignedCertifier', 'name email')
-  .sort({ 'audit.submittedAt': 1 });
-};
-
-// Instance method to assign certifier
-RequestSchema.methods.assignCertifier = function(certifierId) {
-  this.assignedCertifier = certifierId;
-  this.status = 'Under Review';
-  this.audit.modifiedBy = certifierId;
-  return this.save();
-};
-
-// Instance method to approve request
-RequestSchema.methods.approve = function(certifierId, comments = '') {
-  this.status = 'Approved';
-  this.review.reviewedBy = certifierId;
-  this.review.reviewedAt = new Date();
-  this.review.comments = comments;
-  this.audit.modifiedBy = certifierId;
-  return this.save();
-};
-
-// Instance method to reject request
-RequestSchema.methods.reject = function(certifierId, reason, details = '') {
-  this.status = 'Rejected';
-  this.review.reviewedBy = certifierId;
-  this.review.reviewedAt = new Date();
-  this.review.rejectionReason = reason;
-  this.review.rejectionDetails = details;
-  this.audit.modifiedBy = certifierId;
-  return this.save();
-};
-
-// Instance method to convert to credit data
-RequestSchema.methods.toCreditData = function() {
-  // Generate unique credit ID
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substr(2, 5);
-  const creditId = `CR-${timestamp}-${random}`.toUpperCase();
-  
-  return {
-    creditId: creditId,
-    producer: this.producer,
-    certifier: this.review.reviewedBy,
-    productionDate: this.productionDate,
-    energyAmountMWh: this.energyAmountMWh,
-    energySource: this.energySource,
-    facilityName: this.facilityName,
-    facilityLocation: this.facilityLocation,
-    proofDocumentUrl: this.proofDocumentUrl,
-    additionalDocuments: this.additionalDocuments,
-    status: 'Certified',
-    metadata: {
-      originalRequestId: this.requestId,
-      certifiedAt: this.review.reviewedAt
-    }
-  };
-};
-
-module.exports = mongoose.model('Request', RequestSchema);
-=======
-  // Status of the request
-  status: {
-    type: String,
-    enum: ['Pending', 'Approved', 'Rejected'],
-    default: 'Pending',
-    index: true
-  },
-  // Reason for rejection (if any)
-  rejectionReason: {
-    type: String,
-    default: null
-  },
-  // All credit request data fields
-  productionDate: {
-    type: Date,
-    required: true
-  },
-  energyAmountMWh: {
-    type: Number,
-    required: true
-  },
-  energySource: {
-    type: String,
-    enum: ['Solar', 'Wind', 'Hydro', 'Geothermal', 'Biomass', 'Other'],
-    required: true
-  },
-  facilityName: {
-    type: String,
-    required: true
-  },
-  facilityLocation: {
-    type: String,
-    required: true
-  },
-  proofDocumentUrl: {
-    type: String,
-    required: true
   },
   additionalDocuments: [{
     name: String,
@@ -360,15 +70,192 @@ module.exports = mongoose.model('Request', RequestSchema);
       enum: ['Certificate', 'Invoice', 'Report', 'Image', 'Other']
     }
   }],
-  // Optionally, notes from the producer
-  notes: {
+  // Request status
+  status: {
     type: String,
-    default: ''
+    enum: {
+      values: ['Pending', 'Under Review', 'Approved', 'Rejected'],
+      message: 'Status must be Pending, Under Review, Approved, or Rejected'
+    },
+    default: 'Pending',
+    index: true
+  },
+  // Certification workflow
+  assignedCertifier: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  reviewStartedAt: {
+    type: Date,
+    default: null
+  },
+  reviewCompletedAt: {
+    type: Date,
+    default: null
+  },
+  // Approval/Rejection details
+  certifier: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  approvedAt: {
+    type: Date,
+    default: null
+  },
+  rejectedAt: {
+    type: Date,
+    default: null
+  },
+  rejectionReason: {
+    type: String,
+    maxlength: [1000, 'Rejection reason cannot exceed 1000 characters']
+  },
+  certifierComments: {
+    type: String,
+    maxlength: [1000, 'Certifier comments cannot exceed 1000 characters']
+  },
+  // Audit trail
+  audit: {
+    submittedAt: {
+      type: Date,
+      default: Date.now
+    },
+    lastModifiedAt: {
+      type: Date,
+      default: Date.now
+    },
+    modifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  },
+  // Environmental impact data (estimated)
+  estimatedEnvironmentalImpact: {
+    co2Avoided: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    waterUsed: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    landUsed: {
+      type: Number,
+      default: 0,
+      min: 0
+    }
   }
-}, {
-  timestamps: true
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
+
+// Pre-save middleware to generate request ID
+RequestSchema.pre('save', function(next) {
+  if (!this.requestId) {
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 5).toUpperCase();
+    this.requestId = `REQ-${year}${month}-${random}-${timestamp.toString().slice(-6)}`;
+  }
+  
+  // Update audit trail
+  this.audit.lastModifiedAt = new Date();
+  
+  next();
+});
+
+// Virtual for request age
+RequestSchema.virtual('ageInDays').get(function() {
+  return Math.floor((new Date() - this.createdAt) / (1000 * 60 * 60 * 24));
+});
+
+// Virtual for production age
+RequestSchema.virtual('productionAgeInDays').get(function() {
+  return Math.floor((new Date() - this.productionDate) / (1000 * 60 * 60 * 24));
+});
+
+// Instance methods
+RequestSchema.methods.assignToCertifier = function(certifierId) {
+  this.assignedCertifier = certifierId;
+  this.status = 'Under Review';
+  this.reviewStartedAt = new Date();
+  this.audit.modifiedBy = certifierId;
+  return this.save();
+};
+
+RequestSchema.methods.approve = function(certifierId, comments = '') {
+  this.status = 'Approved';
+  this.certifier = certifierId;
+  this.approvedAt = new Date();
+  this.reviewCompletedAt = new Date();
+  this.certifierComments = comments;
+  this.audit.modifiedBy = certifierId;
+  return this.save();
+};
+
+RequestSchema.methods.reject = function(certifierId, reason, comments = '') {
+  this.status = 'Rejected';
+  this.certifier = certifierId;
+  this.rejectedAt = new Date();
+  this.reviewCompletedAt = new Date();
+  this.rejectionReason = reason;
+  this.certifierComments = comments;
+  this.audit.modifiedBy = certifierId;
+  return this.save();
+};
+
+// Convert request to credit data format
+RequestSchema.methods.toCreditData = function() {
+  return {
+    producer: this.producer,
+    productionDate: this.productionDate,
+    energyAmountMWh: this.energyAmountMWh,
+    energySource: this.energySource,
+    facilityName: this.facilityName,
+    facilityLocation: this.facilityLocation,
+    proofDocumentUrl: this.proofDocumentUrl,
+    additionalDocuments: this.additionalDocuments,
+    status: 'Certified',
+    certifier: this.certifier,
+    certificationDate: new Date(),
+    certificationNotes: this.certifierComments,
+    environmentalImpact: this.estimatedEnvironmentalImpact,
+    // Reference to original request
+    originalRequest: this._id
+  };
+};
+
+// Static methods
+RequestSchema.statics.findByProducer = function(producerId) {
+  return this.find({ producer: producerId })
+    .populate('producer assignedCertifier certifier', 'name email role')
+    .sort({ createdAt: -1 });
+};
+
+RequestSchema.statics.findPendingRequests = function() {
+  return this.find({ status: { $in: ['Pending', 'Under Review'] } })
+    .populate('producer assignedCertifier', 'name email role walletAddress')
+    .sort({ 'audit.submittedAt': 1 });
+};
+
+RequestSchema.statics.findByStatus = function(status) {
+  return this.find({ status })
+    .populate('producer assignedCertifier certifier', 'name email role')
+    .sort({ createdAt: -1 });
+};
+
+// Indexes for better query performance (removing duplicates)
+RequestSchema.index({ producer: 1, status: 1 });
+RequestSchema.index({ assignedCertifier: 1, status: 1 });
+RequestSchema.index({ 'audit.submittedAt': -1 });
+RequestSchema.index({ createdAt: -1 });
 
 const Request = mongoose.model('Request', RequestSchema);
 module.exports = Request;
->>>>>>> f5f6c5c01a3e82df069ea30fc3675e2180d73b2c

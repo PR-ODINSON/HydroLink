@@ -1,19 +1,7 @@
 const Credit = require('../models/credit.model');
 const Request = require('../models/request.model');
-const Facility = require('../models/facility.model');
-const Transaction = require('../models/transaction.model');
-const { ProductionAnalytics } = require('../models/analytics.model');
-const { Achievement, UserAchievement } = require('../models/achievement.model');
-<<<<<<< HEAD
-const notificationService = require('../../services/notification.service');
 const User = require('../models/user.model');
-=======
-const Request = require('../models/request.model');
-const User = require('../models/user.model');
-const notificationService = require('../../services/notificationService');
-const { sendEmail } = require('../../services/emailService');
 const Notification = require('../models/notification.model');
->>>>>>> f5f6c5c01a3e82df069ea30fc3675e2180d73b2c
 
 // @desc    Request minting for a new credit
 // @route   POST /api/producer/credits
@@ -25,79 +13,41 @@ exports.requestCreditMinting = async (req, res) => {
     facilityName,
     facilityLocation,
     energySource,
-    additionalDocuments,
-    notes
+    additionalDocuments
   } = req.body;
 
   try {
-<<<<<<< HEAD
-    // Generate unique request ID
-    const requestId = Request.generateRequestId();
-    
     // Create new request
     const newRequest = new Request({
-      requestId,
       producer: req.user._id,
-=======
-    // Store the request in the Request model
-    const newRequest = new Request({
-      producer: req.user._id, // from auth middleware
->>>>>>> f5f6c5c01a3e82df069ea30fc3675e2180d73b2c
-      productionDate,
-      energyAmountMWh,
+      productionDate: new Date(productionDate),
+      energyAmountMWh: parseFloat(energyAmountMWh),
       proofDocumentUrl,
       facilityName,
       facilityLocation,
       energySource,
       additionalDocuments: additionalDocuments || [],
-<<<<<<< HEAD
-      status: 'Pending',
-      metadata: {
-        priority: 'Normal',
-        source: 'Web Portal'
-      }
-=======
-      notes: notes || ''
->>>>>>> f5f6c5c01a3e82df069ea30fc3675e2180d73b2c
+      status: 'Pending'
     });
+
     const savedRequest = await newRequest.save();
 
-<<<<<<< HEAD
-    const savedRequest = await newRequest.save();
-
-    // Send notification to producer
-    await notificationService.notifyCreditRequestSubmitted(
-      req.user._id,
-      savedRequest._id,
-      {
-        energyAmountMWh,
-        energySource,
-        facilityName,
-        facilityLocation,
-        productionDate
-      }
-    );
-
-    // Find available certifiers and assign one (or notify all)
+    // Find all certifiers and notify them
     const certifiers = await User.find({ 
-      role: 'Certifier',
-      'preferences.notifications.email': true 
+      role: 'Certifier'
     });
 
-    // For now, notify all certifiers. In a more sophisticated system,
-    // you might assign to a specific certifier based on workload, specialization, etc.
-    for (const certifier of certifiers) {
-      await notificationService.notifyCertifierNewRequest(
-        certifier._id,
-        savedRequest._id,
+    // Create notifications for all certifiers
+    if (certifiers.length > 0) {
+      await Notification.createRequestSubmittedNotification(
+        certifiers.map(c => c._id),
         {
+          requestId: savedRequest._id,
+          producerName: req.user.name,
           energyAmountMWh,
-          energySource,
           facilityName,
-          facilityLocation,
-          productionDate
-        },
-        req.user.name
+          energySource
+        }
       );
     }
 
@@ -106,25 +56,6 @@ exports.requestCreditMinting = async (req, res) => {
       data: savedRequest,
       message: 'Credit request submitted successfully. You will be notified once it is reviewed.'
     });
-=======
-    // Find all certifiers
-    const certifiers = await User.find({ role: 'Certifier', 'preferences.notifications.email': true });
-    for (const certifier of certifiers) {
-      // In-app notification
-      await notificationService.notifyCertifierNewRequest(certifier._id, { producer: req.user, _id: savedRequest._id });
-      // Email notification
-      if (certifier.email) {
-        await sendEmail({
-          to: certifier.email,
-          subject: 'New Credit Request Submitted',
-          text: `A new credit request has been submitted by ${req.user.name || 'a producer'}. Please review and approve/reject in the dashboard.`,
-          html: `<p>A new credit request has been submitted by <b>${req.user.name || 'a producer'}</b>.<br> Please review and approve/reject in the dashboard.</p>`
-        });
-      }
-    }
-
-    res.status(201).json({ success: true, data: savedRequest });
->>>>>>> f5f6c5c01a3e82df069ea30fc3675e2180d73b2c
   } catch (error) {
     console.error('Error in requestCreditMinting:', error);
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
@@ -135,10 +66,7 @@ exports.requestCreditMinting = async (req, res) => {
 // @route   GET /api/producer/requests
 exports.getProducerRequests = async (req, res) => {
     try {
-        const requests = await Request.find({ producer: req.user._id })
-            .populate('assignedCertifier', 'name email')
-            .populate('review.reviewedBy', 'name email')
-            .sort({ 'audit.submittedAt': -1 });
+        const requests = await Request.findByProducer(req.user._id);
         res.status(200).json({ success: true, data: requests });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
@@ -174,20 +102,26 @@ exports.getDashboardStats = async (req, res) => {
             }
         ]);
 
+        // Get request stats
+        const requestStats = await Request.aggregate([
+            { $match: { producer: userId } },
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 },
+                    totalEnergy: { $sum: '$energyAmountMWh' }
+                }
+            }
+        ]);
+
         // Get total production
         const totalProduction = await Credit.aggregate([
             { $match: { producer: userId, status: 'Certified' } },
             { $group: { _id: null, total: { $sum: '$energyAmountMWh' } } }
         ]);
 
-        // Get facilities count
-        const facilitiesCount = await Facility.countDocuments({ owner: userId });
-
-        // Get achievements progress
-        const achievements = await UserAchievement.getUserStats(userId);
-
-        // Calculate efficiency (simplified)
-        const avgEfficiency = 94.2; // This would come from production analytics
+        // Get unread notifications count
+        const unreadNotifications = await Notification.getUnreadCountForUser(userId);
 
         res.status(200).json({
             success: true,
@@ -196,12 +130,17 @@ exports.getDashboardStats = async (req, res) => {
                     total: creditStats.reduce((sum, stat) => sum + stat.count, 0),
                     byStatus: creditStats
                 },
+                requests: {
+                    total: requestStats.reduce((sum, stat) => sum + stat.count, 0),
+                    byStatus: requestStats
+                },
                 production: {
                     total: totalProduction[0]?.total || 0,
-                    efficiency: avgEfficiency
+                    efficiency: 94.2 // Mock efficiency
                 },
-                facilities: facilitiesCount,
-                achievements: achievements
+                notifications: {
+                    unread: unreadNotifications
+                }
             }
         });
     } catch (error) {
@@ -209,88 +148,48 @@ exports.getDashboardStats = async (req, res) => {
     }
 };
 
-// @desc    Get producer facilities
-// @route   GET /api/producer/facilities
-exports.getFacilities = async (req, res) => {
-    try {
-        const facilities = await Facility.findByOwner(req.user._id);
-        res.status(200).json({ success: true, data: facilities });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
-    }
+// @desc    Get all notifications for the logged-in producer
+// @route   GET /api/producer/notifications
+exports.getNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.findForUser(req.user._id);
+    res.status(200).json({ success: true, data: notifications });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
 };
 
-// @desc    Create new facility
-// @route   POST /api/producer/facilities
-exports.createFacility = async (req, res) => {
-    try {
-        const facilityData = {
-            ...req.body,
-            owner: req.user._id
-        };
-
-        const facility = new Facility(facilityData);
-        await facility.save();
-
-        res.status(201).json({ success: true, data: facility });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+// @desc    Mark a notification as read
+// @route   PATCH /api/producer/notifications/:id/read
+exports.markNotificationRead = async (req, res) => {
+  try {
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      { read: true, readAt: new Date() },
+      { new: true }
+    );
+    
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found.' });
     }
+    
+    res.status(200).json({ success: true, data: notification });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
 };
 
-// @desc    Get production analytics
-// @route   GET /api/producer/analytics
-exports.getAnalytics = async (req, res) => {
-    try {
-        const { period = 'monthly', limit = 12 } = req.query;
-        const userId = req.user._id;
-
-        // Get production trends
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setMonth(startDate.getMonth() - parseInt(limit));
-
-        const analytics = await ProductionAnalytics.find({
-            owner: userId,
-            period: period,
-            date: { $gte: startDate, $lte: endDate }
-        }).sort({ date: -1 }).limit(parseInt(limit));
-
-        // Get efficiency stats
-        const efficiencyStats = await ProductionAnalytics.getEfficiencyStats(userId, period);
-
-        res.status(200).json({
-            success: true,
-            data: {
-                trends: analytics.reverse(),
-                efficiency: efficiencyStats[0] || {}
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
-    }
+// @desc    Mark all notifications as read
+// @route   PATCH /api/producer/notifications/read-all
+exports.markAllNotificationsRead = async (req, res) => {
+  try {
+    await Notification.markAllAsReadForUser(req.user._id);
+    res.status(200).json({ success: true, message: 'All notifications marked as read.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
 };
 
-// @desc    Get user achievements
-// @route   GET /api/producer/achievements
-exports.getAchievements = async (req, res) => {
-    try {
-        const userAchievements = await UserAchievement.findByUser(req.user._id);
-        const stats = await UserAchievement.getUserStats(req.user._id);
-
-        res.status(200).json({
-            success: true,
-            data: {
-                achievements: userAchievements,
-                stats: stats
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
-    }
-};
-
-<<<<<<< HEAD
 // @desc    Update producer wallet address
 // @route   PUT /api/producer/wallet  
 exports.updateWalletAddress = async (req, res) => {
@@ -308,47 +207,6 @@ exports.updateWalletAddress = async (req, res) => {
       message: 'Wallet address updated successfully',
       data: { walletAddress: user.walletAddress }
     });
-=======
-// @desc    Get all notifications for the logged-in user
-// @route   GET /api/producer/notifications
-exports.getNotifications = async (req, res) => {
-  try {
-    const notifications = await Notification.find({ user: req.user._id })
-      .sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: notifications });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
-  }
-};
-
-// @desc    Mark a notification as read
-// @route   PATCH /api/producer/notifications/:id/read
-exports.markNotificationRead = async (req, res) => {
-  try {
-    const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      { read: true },
-      { new: true }
-    );
-    if (!notification) {
-      return res.status(404).json({ success: false, message: 'Notification not found.' });
-    }
-    res.status(200).json({ success: true, data: notification });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
-  }
-};
-
-// @desc    Mark all notifications as read
-// @route   PATCH /api/producer/notifications/read-all
-exports.markAllNotificationsRead = async (req, res) => {
-  try {
-    await Notification.updateMany(
-      { user: req.user._id, read: false },
-      { $set: { read: true } }
-    );
-    res.status(200).json({ success: true, message: 'All notifications marked as read.' });
->>>>>>> f5f6c5c01a3e82df069ea30fc3675e2180d73b2c
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
