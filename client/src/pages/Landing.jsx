@@ -141,7 +141,7 @@ const Landing = () => {
       <VideoModal />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-24 min-h-screen flex items-center">
+      <section id="home" className="relative overflow-hidden pt-24 min-h-screen flex items-center">
         {/* Enhanced Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50" />
         <motion.div 

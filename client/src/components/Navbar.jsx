@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Leaf, Bell, User, Menu, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,8 +8,54 @@ const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [activeSection, setActiveSection] = useState('');
   
   const isActive = (path) => location.pathname === path;
+
+  // Scroll-based section highlighting for landing page
+  useEffect(() => {
+    if (!isActive('/')) return;
+
+    const handleScroll = () => {
+      const sections = ['home', 'features', 'about', 'contact'];
+      const scrollPosition = window.scrollY + 200; // Increased offset for better detection
+
+      // Find which section is currently in view
+      let currentSection = '';
+      
+      for (let i = 0; i < sections.length; i++) {
+        const section = sections[i];
+        const element = document.getElementById(section);
+        
+        if (element) {
+          const sectionTop = element.offsetTop;
+          const sectionBottom = sectionTop + element.offsetHeight;
+          
+          console.log(`Section: ${section}, Top: ${sectionTop}, Bottom: ${sectionBottom}, Scroll: ${scrollPosition}`);
+          
+          // Check if scroll position is within this section
+          if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+            currentSection = section;
+            console.log(`Setting active section to: ${section}`);
+            break;
+          }
+        }
+      }
+      
+      // If no section is found, default to home
+      if (!currentSection) {
+        currentSection = 'home';
+      }
+      
+      setActiveSection(currentSection);
+    };
+
+    // Call once on mount to set initial state
+    handleScroll();
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isActive]);
 
   const handleLogout = async () => {
     try {
@@ -77,7 +123,11 @@ const Navbar = ({ onMenuClick }) => {
                       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                   }}
-                  className="text-sm font-medium text-gray-600 hover:text-green-600 transition-colors cursor-pointer"
+                  className={`text-sm font-medium transition-colors cursor-pointer ${
+                    activeSection === 'features' 
+                      ? 'text-green-600 border-b-2 border-green-600' 
+                      : 'text-gray-600 hover:text-green-600'
+                  }`}
                 >
                   Features
                 </button>
@@ -88,7 +138,11 @@ const Navbar = ({ onMenuClick }) => {
                       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                   }}
-                  className="text-sm font-medium text-gray-600 hover:text-green-600 transition-colors cursor-pointer"
+                  className={`text-sm font-medium transition-colors cursor-pointer ${
+                    activeSection === 'about' 
+                      ? 'text-green-600 border-b-2 border-green-600' 
+                      : 'text-gray-600 hover:text-green-600'
+                  }`}
                 >
                   About
                 </button>
@@ -99,7 +153,11 @@ const Navbar = ({ onMenuClick }) => {
                       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                   }}
-                  className="text-sm font-medium text-gray-600 hover:text-green-600 transition-colors cursor-pointer"
+                  className={`text-sm font-medium transition-colors cursor-pointer ${
+                    activeSection === 'contact' 
+                      ? 'text-green-600 border-b-2 border-green-600' 
+                      : 'text-gray-600 hover:text-green-600'
+                  }`}
                 >
                   Contact
                 </button>
