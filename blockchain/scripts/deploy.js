@@ -1,4 +1,5 @@
-import { ethers } from "hardhat";
+import hardhat from "hardhat";
+const { ethers } = hardhat;
 
 /**
  * The main function to handle the deployment of the GreenCredit contract.

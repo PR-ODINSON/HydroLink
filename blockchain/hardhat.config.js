@@ -27,6 +27,7 @@ const config = {
       
       // The list of accounts to use for transactions.
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+      timeout: 120000,
       
       // The official Chain ID for the Amoy testnet.
       chainId: 80002,
