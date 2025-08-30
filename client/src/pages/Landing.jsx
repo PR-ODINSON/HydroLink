@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
+import FadedFooterText from "../components/FadedFooterText";
+
 import Tilt from 'react-parallax-tilt';
 
 import { useAuth } from '../contexts/AuthContext';
@@ -184,6 +186,7 @@ const Landing = () => {
                 Revolutionizing sustainable energy markets through blockchain-powered 
                 green hydrogen credit verification, trading, and retirement platform.
               </motion.p>
+              
               <motion.div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   to={isAuthenticated ? "/dashboard" : "/register"}
@@ -910,8 +913,13 @@ const Landing = () => {
             </motion.div>
           </motion.div>
         </div>
+        
       </section>
+      
       <Footer />
+      <FadedFooterText text="HydroLink" />
+
+      
     </div>
   );
 };
