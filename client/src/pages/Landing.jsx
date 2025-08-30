@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import CountUp from 'react-countup';
 import Tilt from 'react-parallax-tilt';
 
-import { useAuth } from '../contexts/AuthContext';
+impgit ort { useAuth } from '../contexts/AuthContext';
 import Footer from '../components/Footer';
 import { 
   Leaf, 
@@ -27,16 +27,6 @@ const Landing = () => {
   // Parallax effects
   const y1 = useTransform(scrollY, [0, 300], [0, -50]);
   const y2 = useTransform(scrollY, [0, 300], [0, -100]);
-
-
-
-  // Smooth scroll function
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
 
   const { isAuthenticated } = useAuth();
   
