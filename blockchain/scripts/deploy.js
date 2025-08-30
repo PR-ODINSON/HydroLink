@@ -34,7 +34,7 @@ async function main() {
   // Get the compiled contract artifact
   const GreenCredit = await ethers.getContractFactory("GreenCredit");
   
-  // Estimate gas for deployment with minimal gas limit
+  // Estimate gas for deployment with optimized gas price
   const estimatedGas = await GreenCredit.getDeployTransaction(deployer.address).estimateGas?.() || 2000000n;
   const estimatedCost = estimatedGas * optimizedGasPrice;
   
@@ -87,5 +87,5 @@ main()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error("Deployment failed:", error);
-    process.exit(1);a
+    process.exit(1);
   });
