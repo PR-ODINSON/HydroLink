@@ -27,6 +27,194 @@ const UserSchema = new mongoose.Schema({
   walletAddress: {
     type: String,
     default: null,
+  },
+  profile: {
+    company: String,
+    description: String,
+    website: String,
+    phone: String,
+    address: {
+      street: String,
+      city: String,
+      state: String,
+      country: String,
+      zipCode: String
+    },
+    avatar: String,
+    socialLinks: {
+      linkedin: String,
+      twitter: String,
+      website: String
+    }
+  },
+  preferences: {
+    notifications: {
+      email: {
+        type: Boolean,
+        default: true
+      },
+      push: {
+        type: Boolean,
+        default: true
+      },
+      weekly_summary: {
+        type: Boolean,
+        default: true
+      }
+    },
+    privacy: {
+      publicProfile: {
+        type: Boolean,
+        default: false
+      },
+      showInLeaderboard: {
+        type: Boolean,
+        default: true
+      }
+    },
+    dashboard: {
+      defaultView: {
+        type: String,
+        enum: ['overview', 'analytics', 'transactions'],
+        default: 'overview'
+      },
+      chartPreferences: {
+        type: String,
+        enum: ['line', 'bar', 'area'],
+        default: 'area'
+      }
+    }
+  },
+  stats: {
+    level: {
+      type: Number,
+      default: 1,
+      min: 1
+    },
+    points: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    streak: {
+      current: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      longest: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      lastActivity: Date
+    },
+    achievements: {
+      total: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      completed: {
+        type: Number,
+        default: 0,
+        min: 0
+      }
+    }
+  },
+  roleSpecific: {
+    // Producer specific fields
+    producer: {
+      facilities: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Facility'
+      }],
+      totalProduction: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      certificationLevel: {
+        type: String,
+        enum: ['Basic', 'Standard', 'Premium', 'Elite'],
+        default: 'Basic'
+      }
+    },
+    // Certifier specific fields
+    certifier: {
+      verificationCount: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      approvalRate: {
+        type: Number,
+        default: 100,
+        min: 0,
+        max: 100
+      },
+      specializations: [{
+        type: String,
+        enum: ['Solar', 'Wind', 'Hydro', 'Geothermal', 'Biomass', 'Nuclear']
+      }],
+      certificationLevel: {
+        type: String,
+        enum: ['Junior', 'Senior', 'Expert', 'Master'],
+        default: 'Junior'
+      }
+    },
+    // Buyer specific fields
+    buyer: {
+      totalPurchased: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      totalRetired: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      portfolioValue: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      sustainabilityGoals: {
+        annual_offset_target: {
+          type: Number,
+          default: 0,
+          min: 0
+        },
+        current_progress: {
+          type: Number,
+          default: 0,
+          min: 0
+        }
+      }
+    }
+  },
+  security: {
+    lastLogin: Date,
+    lastPasswordChange: Date,
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false
+    },
+    loginAttempts: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    lockUntil: Date
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 
