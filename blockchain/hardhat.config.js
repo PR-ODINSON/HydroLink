@@ -23,7 +23,7 @@ const config = {
     // --- UPDATED: Configuration for the Polygon Amoy testnet ---
     amoy: {
       // The RPC URL to connect to the Amoy network.
-      url: POLYGON_AMOY_RPC_URL || "", 
+      url: "https://rpc-amoy.polygon.technology", 
       
       // The list of accounts to use for transactions.
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
