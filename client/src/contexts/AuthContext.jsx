@@ -1,5 +1,27 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// Cookie helper functions
+const setCookie = (name, value, days = 7) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
+};
+
+const getCookie = (name) => {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+};
+
+const removeCookie = (name) => {
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+};
+
 // Create Auth Context
 const AuthContext = createContext();
 
@@ -13,10 +35,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check localStorage first
-        const storedUser = localStorage.getItem('user');
+        // Check cookies first
+        const storedUser = getCookie('user');
         if (storedUser) {
-          const userData = JSON.parse(storedUser);
+          const userData = JSON.parse(decodeURIComponent(storedUser));
           setUser(userData);
           setIsAuthenticated(true);
           
@@ -27,14 +49,14 @@ export const AuthProvider = ({ children }) => {
           
           if (!response.ok) {
             // If verification fails, clear everything
-            localStorage.removeItem('user');
+            removeCookie('user');
             setUser(null);
             setIsAuthenticated(false);
           }
         }
       } catch (error) {
         console.error('Auth check failed:', error);
-        localStorage.removeItem('user');
+        removeCookie('user');
         setUser(null);
         setIsAuthenticated(false);
       } finally {
@@ -55,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('user');
+      removeCookie('user');
       setUser(null);
       setIsAuthenticated(false);
     }
@@ -68,6 +90,9 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated,
     loading,
     logout,
+    setCookie,
+    getCookie,
+    removeCookie,
   };
 
   return (

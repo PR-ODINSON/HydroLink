@@ -5,7 +5,7 @@ import { Eye, EyeOff, Loader2, Leaf } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { setUser, setIsAuthenticated } = useAuth();
+  const { setUser, setIsAuthenticated, setCookie } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -41,7 +41,8 @@ const Login = () => {
       const data = await response.json();
       
       if (data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user));
+        // Store user data in cookie instead of localStorage
+        setCookie('user', encodeURIComponent(JSON.stringify(data.user)), 7);
         setUser(data.user);
         setIsAuthenticated(true);
         navigate('/dashboard');

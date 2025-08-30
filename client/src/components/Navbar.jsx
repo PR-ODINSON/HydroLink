@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 const Navbar = ({ onMenuClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, removeCookie } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeSection, setActiveSection] = useState('');
   
@@ -63,14 +63,14 @@ const Navbar = ({ onMenuClick }) => {
         method: 'POST',
         credentials: 'include'
       });
-      localStorage.removeItem('user');
+      removeCookie('user');
       navigate('/');
       setShowUserMenu(false);
       window.location.reload(); // Simple page refresh to reset state
     } catch (error) {
       console.error('Logout failed:', error);
       // Still logout locally even if server call fails
-      localStorage.removeItem('user');
+      removeCookie('user');
       navigate('/');
       setShowUserMenu(false);
       window.location.reload();
