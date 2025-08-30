@@ -180,7 +180,7 @@ UserAchievementSchema.statics.findByUser = function(userId) {
 
 UserAchievementSchema.statics.getUserStats = async function(userId) {
   const stats = await this.aggregate([
-    { $match: { user: mongoose.Types.ObjectId(userId) } },
+    { $match: { user: new mongoose.Types.ObjectId(userId) } },
     {
       $group: {
         _id: '$status',
@@ -213,7 +213,7 @@ UserAchievementSchema.statics.getUserStats = async function(userId) {
 
 UserAchievementSchema.statics.calculateUserLevel = async function(userId) {
   const totalPoints = await this.aggregate([
-    { $match: { user: mongoose.Types.ObjectId(userId), status: 'completed' } },
+    { $match: { user: new mongoose.Types.ObjectId(userId), status: 'completed' } },
     {
       $lookup: {
         from: 'achievements',

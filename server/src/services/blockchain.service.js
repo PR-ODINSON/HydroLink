@@ -7,20 +7,32 @@ const path = require('path');
 const contractABI = require('../config/contractABI.json');
 
 // Load env variables
-const CONTRACT_ADDRESS = process.env.GREEN_CREDIT_CONTRACT_ADDRESS || '0xD3998D5E1D7a7F6B386Df95D2e9dd2EC00a2b5Da';
-const PRIVATE_KEY = process.env.CONTRACT_OWNER_PRIVATE_KEY || '4c84bcea3a3ccda5fc904b32feecd772b86f46c35760cf40da2f5da758888f55';
-const RPC_URL = process.env.BLOCKCHAIN_RPC_URL || 'https://polygon-amoy.g.alchemy.com/v2/vH_FFaA38uWCeoeMpPNat';
+const CONTRACT_ADDRESS = process.env.GREEN_CREDIT_CONTRACT_ADDRESS;
+const PRIVATE_KEY = process.env.CONTRACT_OWNER_PRIVATE_KEY;
+const RPC_URL = process.env.BLOCKCHAIN_RPC_URL;
 
 // Setup provider and signer
 let provider, wallet, contract;
 
-try {
-  provider = new ethers.JsonRpcProvider(RPC_URL);
-  wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-  contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, wallet);
-} catch (error) {
-  console.warn('Blockchain connection not configured properly. Using mock mode.');
-  console.warn('Error:', error.message);
+// Check if blockchain configuration is available
+if (RPC_URL && PRIVATE_KEY && CONTRACT_ADDRESS) {
+  try {
+    provider = new ethers.JsonRpcProvider(RPC_URL);
+    wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+    contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, wallet);
+    console.log('Blockchain connection configured successfully.');
+  } catch (error) {
+    console.warn('Blockchain connection failed. Using mock mode.');
+    console.warn('Error:', error.message);
+    provider = null;
+    wallet = null;
+    contract = null;
+  }
+} else {
+  console.log('Blockchain configuration not provided. Using mock mode.');
+  provider = null;
+  wallet = null;
+  contract = null;
 }
 
 /**

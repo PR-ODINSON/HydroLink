@@ -101,26 +101,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         md:translate-x-0 md:relative md:top-0 md:h-screen md:border-r-0
       `}>
         <div className="flex flex-col h-full overflow-hidden">
-          {/* Role Header */}
-          {user && (
-            <div className="px-3 py-4 border-b border-gray-200">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
-                    {user.name?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {user.name}
-                  </p>
-                  <p className="text-xs text-gray-500 capitalize">
-                    {user.role} Portal
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+    
           
           {/* Menu Items */}
           <nav className="flex-1 py-6 min-h-0">

@@ -189,8 +189,8 @@ TransactionSchema.statics.findByCredit = function(creditId) {
 TransactionSchema.statics.getTransactionStats = async function(userId = null) {
   const matchStage = userId ? {
     $or: [
-      { from: mongoose.Types.ObjectId(userId) },
-      { to: mongoose.Types.ObjectId(userId) }
+      { from: new mongoose.Types.ObjectId(userId) },
+      { to: new mongoose.Types.ObjectId(userId) }
     ]
   } : {};
 

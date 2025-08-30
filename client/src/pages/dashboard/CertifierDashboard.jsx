@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Shield, 
@@ -12,56 +12,134 @@ import {
   TrendingUp,
   Activity,
   Search,
-  Filter
+  Filter,
+  Loader2
 } from 'lucide-react';
 import StatsGrid from '../../components/dashboard/StatsGrid';
 import ChartsSection from '../../components/dashboard/ChartsSection';
 import ActivityList from '../../components/dashboard/ActivityList';
 import QuickActions from '../../components/dashboard/QuickActions';
+import { useAuth } from '../../contexts/AuthContext';
 
 const CertifierDashboard = () => {
+  const { user } = useAuth();
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [stats, setStats] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock data for certifier dashboard
-  const stats = [
-    {
-      title: "Credits Verified",
-      value: "8,420",
-      icon: Shield,
-      trend: "up",
-      trendValue: "+12.3%",
-      color: "blue",
-      subtitle: "This month"
-    },
-    {
-      title: "Pending Requests",
-      value: "23",
-      icon: Clock,
-      trend: "down",
-      trendValue: "-5.2%",
-      color: "orange",
-      subtitle: "Awaiting review"
-    },
-    {
-      title: "Approval Rate",
-      value: "94.7%",
-      icon: CheckCircle,
-      trend: "up",
-      trendValue: "+1.8%",
-      color: "green",
-      subtitle: "Quality score"
-    },
-    {
-      title: "Fraud Detected",
-      value: "3",
-      icon: AlertTriangle,
-      trend: "down",
-      trendValue: "-50%",
-      color: "red",
-      subtitle: "This month"
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/certifier/dashboard', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          const dashboardData = data.data;
+          
+          // Transform API data into stats format
+          const transformedStats = [
+            {
+              title: "Credits Verified",
+              value: dashboardData.stats?.creditsVerified?.toString() || "0",
+              icon: Shield,
+              trend: "up",
+              trendValue: "+12.3%",
+              color: "blue",
+              subtitle: "Total verified"
+            },
+            {
+              title: "Pending Requests",
+              value: dashboardData.stats?.pendingRequests?.toString() || "0",
+              icon: Clock,
+              trend: "down",
+              trendValue: "-5.2%",
+              color: "orange",
+              subtitle: "Awaiting review"
+            },
+            {
+              title: "Approval Rate",
+              value: `${dashboardData.stats?.approvalRate?.toFixed(1) || '0'}%`,
+              icon: CheckCircle,
+              trend: "up",
+              trendValue: "+1.8%",
+              color: "green",
+              subtitle: "Quality score"
+            },
+            {
+              title: "Fraud Detected",
+              value: dashboardData.stats?.fraudDetected?.toString() || "0",
+              icon: AlertTriangle,
+              trend: "down",
+              trendValue: "-50%",
+              color: "red",
+              subtitle: "This month"
+            }
+          ];
+          
+          setStats(transformedStats);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err.message);
+        // Fallback to default stats if API fails
+        setStats([
+          {
+            title: "Credits Verified",
+            value: "0",
+            icon: Shield,
+            trend: "stable",
+            trendValue: "0%",
+            color: "blue",
+            subtitle: "Total verified"
+          },
+          {
+            title: "Pending Requests",
+            value: "0",
+            icon: Clock,
+            trend: "stable",
+            trendValue: "0%",
+            color: "orange",
+            subtitle: "Awaiting review"
+          },
+          {
+            title: "Approval Rate",
+            value: "0%",
+            icon: CheckCircle,
+            trend: "stable",
+            trendValue: "0%",
+            color: "green",
+            subtitle: "Quality score"
+          },
+          {
+            title: "Fraud Detected",
+            value: "0",
+            icon: AlertTriangle,
+            trend: "stable",
+            trendValue: "0%",
+            color: "red",
+            subtitle: "This month"
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchDashboardData();
     }
-  ];
+  }, [user]);
 
+  // Mock data for charts (can be replaced with real data later)
   const charts = [
     {
       type: 'area',
@@ -252,10 +330,31 @@ const CertifierDashboard = () => {
         </p>
       </motion.div>
 
-      {/* Stats Grid */}
-      <StatsGrid stats={stats} className="mb-8" />
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+          <span className="ml-2 text-gray-600">Loading dashboard data...</span>
+        </div>
+      )}
 
-      {/* Fraud Alert */}
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+          <div className="flex items-center">
+            <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
+            <span className="text-red-800">Error: {error}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Dashboard Content */}
+      {!loading && (
+        <>
+          {/* Stats Grid */}
+          <StatsGrid stats={stats} className="mb-8" />
+
+          {/* Fraud Alert */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -372,6 +471,8 @@ const CertifierDashboard = () => {
         {/* Quick Actions */}
         <QuickActions actions={quickActions} title="Verification Tools" />
       </div>
+        </>
+      )}
     </div>
   );
 };

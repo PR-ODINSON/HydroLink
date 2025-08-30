@@ -37,6 +37,14 @@ const config = {
       gasPrice: 30000000000, // 30 gwei (lower than default)
       blockGasLimit: 20000000,
     },
+
+    // Sepolia testnet (better faucet availability)
+    sepolia: {
+      url: "https://rpc.sepolia.org",
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+      chainId: 11155111,
+      gasPrice: 20000000000, // 20 gwei
+    },
   },
 
   // --- UPDATED: Etherscan configuration for Amoy ---

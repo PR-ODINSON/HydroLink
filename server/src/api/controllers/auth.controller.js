@@ -43,15 +43,25 @@ exports.registerUser = async (req, res) => {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       });
 
+      // Also set user cookie for frontend access
+      const userData = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        walletAddress: user.walletAddress,
+      };
+      
+      res.cookie('user', encodeURIComponent(JSON.stringify(userData)), {
+        httpOnly: false, // Allow frontend to access
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
       res.status(201).json({
         success: true,
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          walletAddress: user.walletAddress,
-        },
+        user: userData,
         message: 'User registered successfully',
       });
     }
@@ -84,15 +94,25 @@ exports.loginUser = async (req, res) => {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       });
 
+      // Also set user cookie for frontend access
+      const userData = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        walletAddress: user.walletAddress,
+      };
+      
+      res.cookie('user', encodeURIComponent(JSON.stringify(userData)), {
+        httpOnly: false, // Allow frontend to access
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
       res.json({
         success: true,
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          walletAddress: user.walletAddress,
-        },
+        user: userData,
         message: 'Login successful',
       });
     } else {
@@ -116,6 +136,11 @@ exports.logoutUser = async (req, res) => {
   try {
     res.cookie('token', '', {
       httpOnly: true,
+      expires: new Date(0),
+    });
+
+    res.cookie('user', '', {
+      httpOnly: false,
       expires: new Date(0),
     });
 

@@ -43,3 +43,66 @@ exports.approveCredit = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
 };
+
+// @desc    Get certifier dashboard stats
+// @route   GET /api/certifier/dashboard
+exports.getDashboardStats = async (req, res) => {
+    try {
+        const certifierId = req.user._id;
+        
+        // Get credit stats by status
+        const creditStats = await Credit.aggregate([
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 },
+                    totalEnergy: { $sum: '$energyAmountMWh' }
+                }
+            }
+        ]);
+
+        // Get credits verified by this certifier
+        const verifiedByCertifier = await Credit.countDocuments({ 
+            certifier: certifierId,
+            status: 'Certified'
+        });
+
+        // Get pending credits count
+        const pendingCount = await Credit.countDocuments({ status: 'Pending' });
+
+        // Get rejected credits count
+        const rejectedCount = await Credit.countDocuments({ status: 'Rejected' });
+
+        // Get total credits verified
+        const totalVerified = await Credit.countDocuments({ status: 'Certified' });
+
+        // Calculate approval rate
+        const totalProcessed = totalVerified + rejectedCount;
+        const approvalRate = totalProcessed > 0 ? (totalVerified / totalProcessed) * 100 : 0;
+
+        // Get recent activities (last 10 credits processed by this certifier)
+        const recentActivities = await Credit.find({ 
+            certifier: certifierId 
+        })
+        .populate('producer', 'name')
+        .sort({ updatedAt: -1 })
+        .limit(10)
+        .select('status energyAmountMWh producer updatedAt');
+
+        res.status(200).json({
+            success: true,
+            data: {
+                stats: {
+                    creditsVerified: totalVerified,
+                    pendingRequests: pendingCount,
+                    approvalRate: Math.round(approvalRate * 10) / 10, // Round to 1 decimal
+                    fraudDetected: rejectedCount // Simplified - in real app this would be separate
+                },
+                creditBreakdown: creditStats,
+                recentActivities: recentActivities
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};

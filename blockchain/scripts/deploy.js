@@ -26,12 +26,17 @@ async function main() {
   const feeData = await ethers.provider.getFeeData();
   console.log("Current gas price:", ethers.formatUnits(feeData.gasPrice, "gwei"), "gwei");
   
+  // Use an extremely low gas price to save costs (10,000x less)
+  // But ensure it's not too low for the network
+  const optimizedGasPrice = feeData.gasPrice / 10000n > 1000000000n ? feeData.gasPrice / 10000n : 1000000000n; // At least 1 gwei
+  console.log("Optimized gas price:", ethers.formatUnits(optimizedGasPrice, "gwei"), "gwei");
+  
   // Get the compiled contract artifact
   const GreenCredit = await ethers.getContractFactory("GreenCredit");
   
-  // Estimate gas for deployment
+  // Estimate gas for deployment with minimal gas limit
   const estimatedGas = await GreenCredit.getDeployTransaction(deployer.address).estimateGas?.() || 2000000n;
-  const estimatedCost = estimatedGas * feeData.gasPrice;
+  const estimatedCost = estimatedGas * optimizedGasPrice;
   
   console.log("Estimated gas:", estimatedGas.toString());
   console.log("Estimated cost:", ethers.formatEther(estimatedCost), "MATIC");
@@ -40,14 +45,14 @@ async function main() {
     console.error("❌ Insufficient balance for deployment!");
     console.error(`Need: ${ethers.formatEther(estimatedCost)} MATIC`);
     console.error(`Have: ${ethers.formatEther(balance)} MATIC`);
+    console.error("💡 Try getting more testnet MATIC from: https://faucet.polygon.technology/");
     process.exit(1);
   }
 
   // Deploy with optimized gas settings
   console.log("Deploying GreenCredit contract...");
   const greenCredit = await GreenCredit.deploy(deployer.address, {
-    gasLimit: estimatedGas + 100000n, // Add buffer
-    gasPrice: feeData.gasPrice
+    gasPrice: optimizedGasPrice
   });
 
   // Wait for deployment
@@ -59,8 +64,8 @@ async function main() {
   console.log("Setting the deployer as the initial certifier...");
   try {
     const tx = await greenCredit.setCertifier(deployer.address, {
-      gasLimit: 100000n,
-      gasPrice: feeData.gasPrice
+      gasLimit: 50000n,
+      gasPrice: optimizedGasPrice
     });
     await tx.wait();
     console.log("✅ Certifier set successfully.");
@@ -82,5 +87,5 @@ main()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error("Deployment failed:", error);
-    process.exit(1);
+    process.exit(1);a
   });

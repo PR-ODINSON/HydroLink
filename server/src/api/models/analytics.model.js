@@ -208,7 +208,7 @@ ProductionAnalyticsSchema.statics.getEfficiencyStats = async function(ownerId, p
   return this.aggregate([
     { 
       $match: { 
-        owner: mongoose.Types.ObjectId(ownerId), 
+        owner: new mongoose.Types.ObjectId(ownerId), 
         period: period 
       } 
     },

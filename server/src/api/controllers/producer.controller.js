@@ -7,7 +7,16 @@ const { Achievement, UserAchievement } = require('../models/achievement.model');
 // @desc    Request minting for a new credit
 // @route   POST /api/producer/credits
 exports.requestCreditMinting = async (req, res) => {
-  const { productionDate, energyAmountMWh, proofDocumentUrl } = req.body;
+  const { 
+    productionDate, 
+    energyAmountMWh, 
+    proofDocumentUrl,
+    creditId,
+    facilityName,
+    facilityLocation,
+    energySource,
+    additionalDocuments
+  } = req.body;
   
   try {
     const newCredit = new Credit({
@@ -15,6 +24,11 @@ exports.requestCreditMinting = async (req, res) => {
       productionDate,
       energyAmountMWh,
       proofDocumentUrl,
+      creditId,
+      facilityName,
+      facilityLocation,
+      energySource,
+      additionalDocuments: additionalDocuments || [],
       status: 'Pending',
     });
 
