@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import FadedFooterText from "../components/FadedFooterText";
 
 import Tilt from 'react-parallax-tilt';
-
-import { useAuth } from '../contexts/AuthContext';
 import Footer from '../components/Footer';
 import { 
   Leaf, 
@@ -19,10 +17,16 @@ import {
   CheckCircle,
   ArrowRight,
   Play,
-  X
+  Menu,
+  X,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 const Landing = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const { scrollY } = useScroll();
 
@@ -30,7 +34,23 @@ const Landing = () => {
   const y1 = useTransform(scrollY, [0, 300], [0, -50]);
   const y2 = useTransform(scrollY, [0, 300], [0, -100]);
 
-  const { isAuthenticated } = useAuth();
+  // Handle scroll effects
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Smooth scroll function
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setIsMobileMenuOpen(false);
+    }
+  };
   
   const features = [
     {
@@ -127,13 +147,109 @@ const Landing = () => {
     </AnimatePresence>
   );
 
-  return (
-    <div className="min-h-screen">
+  // Enhanced Navigation Component
+  const Navigation = () => (
+    <nav 
+      className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out ${
+        isScrolled 
+          ? 'bg-white/95 backdrop-blur-xl border-b border-green-100 shadow-lg transform translate-y-0' 
+          : 'bg-white/80 backdrop-blur-lg border-b border-green-100/50'
+      } ${isDarkMode ? 'dark:bg-gray-900/95 dark:border-gray-700' : ''}`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <motion.div 
+            className="flex items-center space-x-2"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
+              <Leaf className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              HydroLink
+            </span>
+          </motion.div>
 
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            {['features', 'about', 'contact'].map((item) => (
+              <button
+                key={item}
+                onClick={() => scrollToSection(item)}
+                className="text-gray-600 hover:text-green-600 transition-colors duration-200 capitalize font-medium"
+              >
+                {item}
+              </button>
+            ))}
+            
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
+            <Link 
+              to="/register" 
+              className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-2 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              Get Started
+            </Link>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white/95 backdrop-blur-lg border-t border-green-100"
+          >
+            <div className="px-4 py-6 space-y-4">
+              {['features', 'about', 'contact'].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => scrollToSection(item)}
+                  className="block w-full text-left text-gray-600 hover:text-green-600 transition-colors duration-200 capitalize font-medium py-2"
+                >
+                  {item}
+                </button>
+              ))}
+              <Link 
+                to="/register" 
+                className="block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg text-center font-medium"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Get Started
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
+  );
+
+  return (
+    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+      <Navigation />
       <VideoModal />
 
       {/* Hero Section */}
-      <section id="home" className="relative overflow-hidden pt-24 min-h-screen flex items-center">
+      <section className="relative overflow-hidden pt-16 min-h-screen flex items-center">
         {/* Enhanced Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50" />
         <motion.div 
@@ -177,34 +293,50 @@ const Landing = () => {
                 Green Hydrogen Credits
               </motion.h1>
               
-              <motion.p 
-                className="text-xl text-gray-600 mb-8 leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-              >
-                Revolutionizing sustainable energy markets through blockchain-powered 
-                green hydrogen credit verification, trading, and retirement platform.
-              </motion.p>
-              
-              <motion.div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  to={isAuthenticated ? "/dashboard" : "/register"}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center group"
-                >
-                  {isAuthenticated ? "Go to Dashboard" : "Get Started"}
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <motion.button 
-                  onClick={() => setShowVideoModal(true)}
-                  className="border-2 border-green-500 text-green-600 px-8 py-4 rounded-xl hover:bg-green-50 transition-all duration-300 flex items-center justify-center group"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Play className="mr-2 w-5 h-5" />
-                  Watch Demo
-                </motion.button>
-              </motion.div>
+                             <motion.p 
+                 className="text-xl text-gray-600 mb-8 leading-relaxed"
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ duration: 0.8, delay: 0.4 }}
+               >
+                 Revolutionizing sustainable energy markets through blockchain-powered 
+                 green hydrogen credit verification, trading, and retirement platform.
+               </motion.p>
+               
+               <motion.div 
+                 className="flex flex-col sm:flex-row gap-4"
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ duration: 0.8, delay: 0.6 }}
+               >
+                 <motion.div
+                   whileHover={{ scale: 1.05 }}
+                   whileTap={{ scale: 0.95 }}
+                 >
+                   <Link
+                     to="/register"
+                     className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center justify-center group shadow-lg hover:shadow-xl relative overflow-hidden"
+                   >
+                     <motion.div
+                       className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                       initial={{ x: '-100%' }}
+                       whileHover={{ x: '100%' }}
+                       transition={{ duration: 0.6 }}
+                     />
+                     <span className="relative z-10">Get Started</span>
+                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
+                   </Link>
+                 </motion.div>
+                 <motion.button 
+                   onClick={() => setShowVideoModal(true)}
+                   className="border-2 border-green-500 text-green-600 px-8 py-4 rounded-xl hover:bg-green-50 transition-all duration-300 flex items-center justify-center group"
+                   whileHover={{ scale: 1.05 }}
+                   whileTap={{ scale: 0.95 }}
+                 >
+                   <Play className="mr-2 w-5 h-5" />
+                   Watch Demo
+                 </motion.button>
+               </motion.div>
             </motion.div>
             
             <motion.div
@@ -881,7 +1013,7 @@ const Landing = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link
-                  to={isAuthenticated ? "/dashboard" : "/register"}
+                  to="/register"
                   className="bg-white text-green-600 px-8 py-4 rounded-xl hover:bg-gray-50 transition-all duration-300 inline-flex items-center group font-semibold shadow-lg hover:shadow-xl relative overflow-hidden"
                 >
                   {/* Pulse animation */}
@@ -906,7 +1038,7 @@ const Landing = () => {
                     transition={{ duration: 0.6 }}
                   />
                   
-                  <span className="relative z-10">{isAuthenticated ? "Go to Dashboard" : "Get Started Now"}</span>
+                  <span className="relative z-10">Get Started Now</span>
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
                 </Link>
               </motion.div>

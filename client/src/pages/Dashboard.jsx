@@ -1,301 +1,229 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { 
-  CreditCard, 
-  TrendingUp, 
-  Users, 
-  Award,
-  Activity,
-  DollarSign,
-  Zap,
-  Shield
-} from 'lucide-react';
-import DashboardCard from '../components/DashboardCard';
-import Chart from '../components/Chart';
+import React, { useState } from 'react';
+import { PlusCircle, FileUp, Clock, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 
-const Dashboard = () => {
-  // Sample data for charts
-  const creditTrendData = [
-    { name: 'Jan', value: 1200 },
-    { name: 'Feb', value: 1900 },
-    { name: 'Mar', value: 3200 },
-    { name: 'Apr', value: 2800 },
-    { name: 'May', value: 4100 },
-    { name: 'Jun', value: 3600 },
-    { name: 'Jul', value: 5200 }
-  ];
+// --- Mock Data ---
+// In a real application, this data would come from your backend API.
+const initialCredits = [
+  {
+    id: 'CR-2025-08-30A',
+    productionDate: '2025-08-30',
+    energyAmountMWh: 150,
+    status: 'Certified',
+    txHash: '0x123...abc',
+  },
+  {
+    id: 'CR-2025-08-28B',
+    productionDate: '2025-08-28',
+    energyAmountMWh: 125,
+    status: 'Pending',
+    txHash: null,
+  },
+  {
+    id: 'CR-2025-08-25C',
+    productionDate: '2025-08-25',
+    energyAmountMWh: 200,
+    status: 'Rejected',
+    txHash: null,
+  },
+];
 
-  const marketShareData = [
-    { name: 'Solar H2', value: 45, color: '#10b981' },
-    { name: 'Wind H2', value: 35, color: '#3b82f6' },
-    { name: 'Hydro H2', value: 15, color: '#8b5cf6' },
-    { name: 'Other', value: 5, color: '#f59e0b' }
-  ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'mint',
-      description: 'New credits minted by GreenTech Industries',
-      amount: '1,250 credits',
-      time: '2 hours ago',
-      status: 'completed'
+// --- Helper Component for Status Badges ---
+const StatusIndicator = ({ status }) => {
+  const statusConfig = {
+    Certified: {
+      icon: <CheckCircle className="w-4 h-4" />,
+      text: 'Certified',
+      className: 'bg-green-100 text-green-800',
     },
-    {
-      id: 2,
-      type: 'transfer',
-      description: 'Credits transferred to EcoEnergy Corp',
-      amount: '800 credits',
-      time: '4 hours ago',
-      status: 'completed'
+    Pending: {
+      icon: <Clock className="w-4 h-4" />,
+      text: 'Pending',
+      className: 'bg-yellow-100 text-yellow-800',
     },
-    {
-      id: 3,
-      type: 'retire',
-      description: 'Credits retired by CleanPower Ltd',
-      amount: '500 credits',
-      time: '6 hours ago',
-      status: 'completed'
+    Rejected: {
+      icon: <XCircle className="w-4 h-4" />,
+      text: 'Rejected',
+      className: 'bg-red-100 text-red-800',
     },
-    {
-      id: 4,
-      type: 'verify',
-      description: 'Credits verified by Authority #7',
-      amount: '2,100 credits',
-      time: '8 hours ago',
-      status: 'pending'
-    }
-  ];
+  };
 
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case 'mint': return <CreditCard className="w-4 h-4" />;
-      case 'transfer': return <TrendingUp className="w-4 h-4" />;
-      case 'retire': return <Award className="w-4 h-4" />;
-      case 'verify': return <Shield className="w-4 h-4" />;
-      default: return <Activity className="w-4 h-4" />;
+  const config = statusConfig[status] || {};
+
+  return (
+    <div className={`inline-flex items-center gap-x-2 px-3 py-1 text-sm font-medium rounded-full ${config.className}`}>
+      {config.icon}
+      {config.text}
+    </div>
+  );
+};
+
+
+// --- Main Producer Dashboard Component ---
+const ProducerDashboard = () => {
+  const [credits, setCredits] = useState(initialCredits);
+  const [formData, setFormData] = useState({
+    productionDate: '',
+    energyAmountMWh: '',
+  });
+  const [proofDocument, setProofDocument] = useState(null);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files.length > 0) {
+      setProofDocument(e.target.files[0]);
     }
   };
 
-  const getActivityColor = (type) => {
-    switch (type) {
-      case 'mint': return 'text-green-600 bg-green-100';
-      case 'transfer': return 'text-blue-600 bg-blue-100';
-      case 'retire': return 'text-purple-600 bg-purple-100';
-      case 'verify': return 'text-orange-600 bg-orange-100';
-      default: return 'text-gray-600 bg-gray-100';
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.productionDate || !formData.energyAmountMWh || !proofDocument) {
+      alert('Please fill in all fields and upload a proof document.');
+      return;
     }
+
+    // In a real app, you would send this data to your backend API.
+    // Here, we'll just simulate the request by adding a new credit to our local state.
+    const newCredit = {
+      id: `CR-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}D`,
+      productionDate: formData.productionDate,
+      energyAmountMWh: parseFloat(formData.energyAmountMWh),
+      status: 'Pending',
+      txHash: null,
+    };
+    
+    setCredits([newCredit, ...credits]);
+
+    // Reset form
+    setFormData({ productionDate: '', energyAmountMWh: '' });
+    setProofDocument(null);
+    document.getElementById('proofDocument').value = null; // Clear file input
+
+    console.log('New Credit Request Submitted:', { ...newCredit, proofDocumentName: proofDocument.name });
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <motion.h1 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-gray-900 mb-2"
-        >
-          Dashboard Overview
-        </motion.h1>
-        <p className="text-gray-600">
-          Welcome back! Here's what's happening with your green hydrogen credits.
-        </p>
-      </div>
+    <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Producer Dashboard</h1>
+          <p className="text-gray-600 mt-1">Welcome! Manage your green hydrogen production and credit requests here.</p>
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <DashboardCard
-            title="Total Credits Issued"
-            value="24,580"
-            icon={CreditCard}
-            trend="up"
-            trendValue="+12.5%"
-            color="green"
-            subtitle="This month"
-          />
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <DashboardCard
-            title="Credits Verified"
-            value="18,240"
-            icon={Shield}
-            trend="up"
-            trendValue="+8.3%"
-            color="blue"
-            subtitle="Certified by authorities"
-          />
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <DashboardCard
-            title="Active Producers"
-            value="1,240"
-            icon={Users}
-            trend="up"
-            trendValue="+15.2%"
-            color="purple"
-            subtitle="Registered users"
-          />
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <DashboardCard
-            title="Market Volume"
-            value="$2.4M"
-            icon={DollarSign}
-            trend="up"
-            trendValue="+22.1%"
-            color="orange"
-            subtitle="Total trading volume"
-          />
-        </motion.div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Chart
-            type="area"
-            data={creditTrendData}
-            xKey="name"
-            yKey="value"
-            color="#10b981"
-            title="Credit Issuance Trend"
-            gradient={true}
-            height={300}
-          />
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <Chart
-            type="pie"
-            data={marketShareData}
-            xKey="name"
-            yKey="value"
-            title="Market Share by Source"
-            height={300}
-          />
-        </motion.div>
-      </div>
-
-      {/* Recent Activity and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="lg:col-span-2"
-        >
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-              <button className="text-green-600 hover:text-green-700 text-sm font-medium">
-                View All
-              </button>
-            </div>
-            <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                  <div className={`p-2 rounded-lg ${getActivityColor(activity.type)}`}>
-                    {getActivityIcon(activity.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {activity.description}
-                    </p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-sm text-gray-500">{activity.amount}</span>
-                      <span className="text-xs text-gray-400">•</span>
-                      <span className="text-xs text-gray-400">{activity.time}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          
+          {/* Left Column: Request Form */}
+          <div className="lg:col-span-2">
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <div className="flex items-center mb-4">
+                <PlusCircle className="w-6 h-6 text-green-600 mr-3" />
+                <h2 className="text-xl font-semibold text-gray-800">Request New Credit Minting</h2>
+              </div>
+              <p className="text-sm text-gray-500 mb-6">Submit details of your latest production batch for certification.</p>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="productionDate" className="block text-sm font-medium text-gray-700 mb-1">Production Date</label>
+                  <input
+                    type="date"
+                    id="productionDate"
+                    name="productionDate"
+                    value={formData.productionDate}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="energyAmountMWh" className="block text-sm font-medium text-gray-700 mb-1">Energy Amount (in MWh)</label>
+                  <input
+                    type="number"
+                    id="energyAmountMWh"
+                    name="energyAmountMWh"
+                    placeholder="e.g., 150"
+                    value={formData.energyAmountMWh}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="proofDocument" className="block text-sm font-medium text-gray-700 mb-1">Proof Document</label>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                    <div className="space-y-1 text-center">
+                      <FileUp className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600">
+                        <label htmlFor="proofDocument" className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none">
+                          <span>Upload a file</span>
+                          <input id="proofDocument" name="proofDocument" type="file" className="sr-only" onChange={handleFileChange} required />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">PDF, PNG, JPG up to 10MB</p>
+                      {proofDocument && <p className="text-sm text-green-700 mt-2">Selected: {proofDocument.name}</p>}
                     </div>
                   </div>
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    activity.status === 'completed' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {activity.status}
-                  </div>
                 </div>
-              ))}
+                <button
+                  type="submit"
+                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  Submit Request
+                </button>
+              </form>
             </div>
           </div>
-        </motion.div>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
-            <div className="space-y-3">
-              <button className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-lg transition-all group">
-                <div className="flex items-center">
-                  <CreditCard className="w-5 h-5 text-green-600 mr-3" />
-                  <span className="font-medium text-green-700">Mint Credits</span>
-                </div>
-                <TrendingUp className="w-4 h-4 text-green-600 group-hover:translate-x-1 transition-transform" />
-              </button>
-              
-              <button className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg transition-all group">
-                <div className="flex items-center">
-                  <Shield className="w-5 h-5 text-blue-600 mr-3" />
-                  <span className="font-medium text-blue-700">Verify Credits</span>
-                </div>
-                <TrendingUp className="w-4 h-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
-              </button>
-              
-              <button className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg transition-all group">
-                <div className="flex items-center">
-                  <Zap className="w-5 h-5 text-purple-600 mr-3" />
-                  <span className="font-medium text-purple-700">Transfer Credits</span>
-                </div>
-                <TrendingUp className="w-4 h-4 text-purple-600 group-hover:translate-x-1 transition-transform" />
-              </button>
-              
-              <button className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-lg transition-all group">
-                <div className="flex items-center">
-                  <Award className="w-5 h-5 text-orange-600 mr-3" />
-                  <span className="font-medium text-orange-700">Retire Credits</span>
-                </div>
-                <TrendingUp className="w-4 h-4 text-orange-600 group-hover:translate-x-1 transition-transform" />
-              </button>
+          {/* Right Column: Credits List */}
+          <div className="lg:col-span-3">
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">My Credits History</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Credit ID</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount (MWh)</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {credits.map((credit) => (
+                      <tr key={credit.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{credit.id}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{credit.productionDate}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{credit.energyAmountMWh}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <StatusIndicator status={credit.status} />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {credit.txHash ? (
+                            <a href={`https://mumbai.polygonscan.com/tx/${credit.txHash}`} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-800 inline-flex items-center">
+                              View on Explorer <ExternalLink className="w-4 h-4 ml-1.5" />
+                            </a>
+                          ) : (
+                            <span className="text-gray-400">N/A</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </motion.div>
+
+        </div>
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default ProducerDashboard;

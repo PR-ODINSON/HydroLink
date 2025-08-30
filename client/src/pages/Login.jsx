@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Loader2, Leaf } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { setUser, setIsAuthenticated, setCookie } = useAuth();
+  const location = useLocation();
+  const { setUser, setIsAuthenticated, setCookie, isAuthenticated, loading: authLoading } = useAuth();
+  
+  // Get the intended destination from location state
+  const from = location.state?.from?.pathname || '/dashboard';
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate, from]);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -45,7 +56,7 @@ const Login = () => {
         setCookie('user', encodeURIComponent(JSON.stringify(data.user)), 7);
         setUser(data.user);
         setIsAuthenticated(true);
-        navigate('/dashboard');
+        navigate(from, { replace: true });
       } else {
         setError(data.message || 'Login failed');
       }
