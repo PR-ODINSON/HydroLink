@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load ABI
-const contractABI = require('../config/contractABI.json').abi;
+const contractABI = require('../config/contractABI.json');
 
 // Load env variables
 const CONTRACT_ADDRESS = process.env.GREEN_CREDIT_CONTRACT_ADDRESS;
