@@ -34,7 +34,7 @@ const Layout = ({ children }) => {
             </div>
           )}
           {isLandingPage && (
-            <main className="min-h-screen pt-16">
+            <main className="min-h-screen">
               {children}
             </main>
           )}
