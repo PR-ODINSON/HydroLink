@@ -31,6 +31,11 @@ const config = {
       
       // The official Chain ID for the Amoy testnet.
       chainId: 80002,
+      
+      // Gas optimization settings
+      gas: 2100000,
+      gasPrice: 30000000000, // 30 gwei (lower than default)
+      blockGasLimit: 20000000,
     },
   },
 

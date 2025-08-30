@@ -8,33 +8,72 @@ async function main() {
   console.log("Preparing for deployment...");
 
   // Get the account that will sign the deployment transaction.
-  // In Hardhat, this is the first account from the configured network.
   const [deployer] = await ethers.getSigners();
   console.log("Deploying contracts with the account:", deployer.address);
   
-  // Get the compiled contract artifact. This is a JSON object representing the contract.
+  // Check balance before deployment
+  const balance = await ethers.provider.getBalance(deployer.address);
+  console.log("Account balance:", ethers.formatEther(balance), "MATIC");
+  
+  if (balance === 0n) {
+    console.error("❌ Insufficient balance! Please get testnet MATIC from:");
+    console.error("🔗 Polygon Amoy Faucet: https://faucet.polygon.technology/");
+    console.error("🔗 Alternative Faucet: https://faucets.chain.link/polygon-amoy");
+    process.exit(1);
+  }
+
+  // Get current gas price and optimize
+  const feeData = await ethers.provider.getFeeData();
+  console.log("Current gas price:", ethers.formatUnits(feeData.gasPrice, "gwei"), "gwei");
+  
+  // Get the compiled contract artifact
   const GreenCredit = await ethers.getContractFactory("GreenCredit");
   
-  // The constructor of GreenCredit.sol requires an 'initialOwner'.
-  // We pass the deployer's address to make them the contract owner.
+  // Estimate gas for deployment
+  const estimatedGas = await GreenCredit.getDeployTransaction(deployer.address).estimateGas?.() || 2000000n;
+  const estimatedCost = estimatedGas * feeData.gasPrice;
+  
+  console.log("Estimated gas:", estimatedGas.toString());
+  console.log("Estimated cost:", ethers.formatEther(estimatedCost), "MATIC");
+  
+  if (balance < estimatedCost) {
+    console.error("❌ Insufficient balance for deployment!");
+    console.error(`Need: ${ethers.formatEther(estimatedCost)} MATIC`);
+    console.error(`Have: ${ethers.formatEther(balance)} MATIC`);
+    process.exit(1);
+  }
+
+  // Deploy with optimized gas settings
   console.log("Deploying GreenCredit contract...");
-  const greenCredit = await GreenCredit.deploy(deployer.address);
+  const greenCredit = await GreenCredit.deploy(deployer.address, {
+    gasLimit: estimatedGas + 100000n, // Add buffer
+    gasPrice: feeData.gasPrice
+  });
 
-  // Wait for the deployment transaction to be mined and confirmed on the blockchain.
+  // Wait for deployment
   await greenCredit.waitForDeployment();
-
-  // Get the final address of the deployed contract.
   const contractAddress = await greenCredit.getAddress();
   console.log("✅ GreenCredit contract deployed successfully to:", contractAddress);
 
-  // --- Post-Deployment Setup ---
-  // It's good practice to perform initial setup in the deployment script.
-  // Here, we set an initial Certifier. For this demo, we'll set the deployer
-  // as the Certifier so they can start minting credits immediately.
+  // Post-deployment setup with gas optimization
   console.log("Setting the deployer as the initial certifier...");
-  const tx = await greenCredit.setCertifier(deployer.address);
-  await tx.wait(); // Wait for the transaction to be mined.
-  console.log("✅ Certifier set successfully.");
+  try {
+    const tx = await greenCredit.setCertifier(deployer.address, {
+      gasLimit: 100000n,
+      gasPrice: feeData.gasPrice
+    });
+    await tx.wait();
+    console.log("✅ Certifier set successfully.");
+  } catch (error) {
+    console.log("⚠️ Certifier setup failed (can be done manually later):", error.message);
+  }
+
+  // Save deployment info
+  console.log("\n📋 Deployment Summary:");
+  console.log("Contract Address:", contractAddress);
+  console.log("Network:", "Polygon Amoy");
+  console.log("Deployer:", deployer.address);
+  console.log("Block Explorer:", `https://amoy.polygonscan.com/address/${contractAddress}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
