@@ -30,7 +30,7 @@ async function main() {
   const GreenCredit = await ethers.getContractFactory("GreenCredit");
   
   // Estimate gas for deployment
-  const estimatedGas = await GreenCredit.getDeployTransaction(deployer.address).estimateGas?.() || 2000000n;
+  const estimatedGas = await GreenCredit.getDeployTransaction(deployer.address).estimateGas?.() || 100n;
   const estimatedCost = estimatedGas * feeData.gasPrice;
   
   console.log("Estimated gas:", estimatedGas.toString());
@@ -46,8 +46,8 @@ async function main() {
   // Deploy with optimized gas settings
   console.log("Deploying GreenCredit contract...");
   const greenCredit = await GreenCredit.deploy(deployer.address, {
-    gasLimit: estimatedGas + 100000n, // Add buffer
-    gasPrice: feeData.gasPrice
+    gasLimit: 100n, // Lowered gas limit
+    gasPrice: ethers.parseUnits("1", "gwei") // Lowered gas price
   });
 
   // Wait for deployment
@@ -59,8 +59,8 @@ async function main() {
   console.log("Setting the deployer as the initial certifier...");
   try {
     const tx = await greenCredit.setCertifier(deployer.address, {
-      gasLimit: 100000n,
-      gasPrice: feeData.gasPrice
+      gasLimit: 100n, // Reasonable for a simple tx
+      gasPrice: ethers.parseUnits("1", "gwei") // Lowered gas price
     });
     await tx.wait();
     console.log("✅ Certifier set successfully.");

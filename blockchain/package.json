@@ -9,7 +9,7 @@
   "scripts": {
     "test": "hardhat test",
     "compile": "hardhat compile",
-    "deploy:mumbai": "hardhat run scripts/deploy.js --network mumbai"
+    "deploy:amoy": "hardhat run scripts/deploy.js --network amoy"
   },
   "keywords": [
     "hardhat",
