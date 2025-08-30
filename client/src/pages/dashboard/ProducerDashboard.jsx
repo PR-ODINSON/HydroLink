@@ -1,324 +1,316 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  CreditCard, 
-  Zap, 
-  TrendingUp, 
-  Award,
-  Trophy,
-  Target,
-  Flame,
-  Star,
-  Loader2,
-  AlertCircle,
-  Plus,
-  CheckCircle
-} from 'lucide-react';
-import StatsGrid from '../../components/dashboard/StatsGrid';
-import ChartsSection from '../../components/dashboard/ChartsSection';
-import ActivityList from '../../components/dashboard/ActivityList';
-import QuickActions from '../../components/dashboard/QuickActions';
+import { PlusCircle, FileText, Clock, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import RequestCreditModal from '../../components/RequestCreditModal';
 
 const ProducerDashboard = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [credits, setCredits] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Fetch both requests and credits on component mount
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/producer/dashboard', {
+        
+        // Fetch requests
+        const requestsResponse = await fetch('/api/producer/requests', {
           credentials: 'include'
         });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          const dashboardData = data.data;
-          
-          // Transform API data into stats format
-          const transformedStats = [
-            {
-              title: "Total Credits",
-              value: dashboardData.credits?.total?.toString() || "0",
-              icon: CreditCard,
-              trend: "up",
-              trendValue: "+15.2%",
-              color: "green",
-              subtitle: "Credits produced"
-            },
-            {
-              title: "Total Production",
-              value: `${dashboardData.production?.total?.toFixed(1) || '0'} MWh`,
-              icon: Zap,
-              trend: "up", 
-              trendValue: "+8.7%",
-              color: "blue",
-              subtitle: "Energy generated"
-            },
-            {
-              title: "Efficiency Rating",
-              value: `${dashboardData.production?.efficiency?.toFixed(1) || '0'}%`,
-              icon: Target,
-              trend: "up",
-              trendValue: "+2.1%", 
-              color: "purple",
-              subtitle: "Production efficiency"
-            },
-            {
-              title: "Active Facilities",
-              value: dashboardData.facilities?.toString() || "0",
-              icon: Trophy,
-              trend: "stable",
-              trendValue: "0",
-              color: "orange",
-              subtitle: "Production sites"
-            }
-          ];
-          
-          setStats(transformedStats);
-        }
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError(err.message);
-        // Fallback to default stats if API fails
-        setStats([
-          {
-            title: "Total Credits",
-            value: "0",
-            icon: CreditCard,
-            trend: "stable",
-            trendValue: "0%",
-            color: "green",
-            subtitle: "Credits produced"
-          },
-          {
-            title: "Total Production",
-            value: "0 MWh",
-            icon: Zap,
-            trend: "stable", 
-            trendValue: "0%",
-            color: "blue",
-            subtitle: "Energy generated"
-          },
-          {
-            title: "Efficiency Rating",
-            value: "0%",
-            icon: Target,
-            trend: "stable",
-            trendValue: "0%", 
-            color: "purple",
-            subtitle: "Production efficiency"
-          },
-          {
-            title: "Active Facilities",
-            value: "0",
-            icon: Trophy,
-            trend: "stable",
-            trendValue: "0",
-            color: "orange",
-            subtitle: "Production sites"
+        if (requestsResponse.ok) {
+          const requestsData = await requestsResponse.json();
+          if (requestsData.success) {
+            setRequests(requestsData.data || []);
           }
-        ]);
+        }
+
+        // Fetch actual credits
+        const creditsResponse = await fetch('/api/producer/credits', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        if (creditsResponse.ok) {
+          const creditsData = await creditsResponse.json();
+          if (creditsData.success) {
+            setCredits(creditsData.data || []);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
     };
 
     if (user) {
-      fetchDashboardData();
+      fetchData();
     }
   }, [user]);
 
-  // Quick actions specific to producers
-  const quickActions = [
-    {
-      title: "Request Credit Minting",
-      description: "Submit new production data for certification",
-      icon: Plus,
-      color: "green",
-      action: () => {
-        // Navigate to credit request form
-        window.location.href = '/credits';
-      }
-    },
-    {
-      title: "View Analytics", 
-      description: "Analyze production trends and efficiency",
-      icon: TrendingUp,
-      color: "blue",
-      action: () => {
-        window.location.href = '/analytics';
-      }
-    },
-    {
-      title: "Manage Facilities",
-      description: "Update facility information and capacity",
-      icon: Zap,
-      color: "purple",
-      action: () => {
-        window.location.href = '/production';
-      }
-    },
-    {
-      title: "Track Achievements",
-      description: "Check progress on sustainability goals",
-      icon: Award,
-      color: "orange",
-      action: () => {
-        window.location.href = '/achievements';
-      }
-    }
-  ];
+  const handleRequestSubmit = async (newRequestData) => {
+    try {
+      console.log('New Credit Request Submitted:', newRequestData);
+      
+      const response = await fetch('/api/producer/credits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(newRequestData)
+      });
 
-  // Mock chart data - in real app this would come from API
-  const chartData = {
-    production: [
-      { month: 'Jan', value: 2400 },
-      { month: 'Feb', value: 2210 },
-      { month: 'Mar', value: 2290 },
-      { month: 'Apr', value: 2000 },
-      { month: 'May', value: 2181 },
-      { month: 'Jun', value: 2500 },
-      { month: 'Jul', value: 2840 }
-    ],
-    efficiency: [
-      { month: 'Jan', value: 92.1 },
-      { month: 'Feb', value: 91.8 },
-      { month: 'Mar', value: 93.2 },
-      { month: 'Apr', value: 92.7 },
-      { month: 'May', value: 94.1 },
-      { month: 'Jun', value: 93.8 },
-      { month: 'Jul', value: 94.2 }
-    ]
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to submit request');
+      }
+
+      if (result.success) {
+        // Add the new request to the requests list (NOT credits)
+        const newRequest = {
+          _id: result.data._id,
+          requestId: result.data.requestId,
+          productionDate: newRequestData.productionDate,
+          energyAmountMWh: parseFloat(newRequestData.energyAmountMWh),
+          status: 'Pending',
+          facilityName: newRequestData.facilityName,
+          facilityLocation: newRequestData.facilityLocation,
+          energySource: newRequestData.energySource,
+          audit: { submittedAt: new Date() }
+        };
+        setRequests([newRequest, ...requests]);
+        setIsModalOpen(false);
+        
+        // Show success message
+        alert('Credit request submitted successfully! You will be notified once a certifier reviews it.');
+      } else {
+        throw new Error(result.message || 'Failed to submit request');
+      }
+    } catch (error) {
+      console.error('Error submitting request:', error);
+      throw error; // Re-throw to let the modal handle the error display
+    }
   };
 
-  // Mock activities - in real app this would come from API
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'credit_minted',
-      title: 'New credit minted',
-      description: '150.5 MWh solar energy credit certified',
-      timestamp: '2 hours ago',
-      icon: CheckCircle,
-      color: 'green'
-    },
-    {
-      id: 2,
-      type: 'production',
-      title: 'Production milestone',
-      description: 'Solar Farm Alpha reached 95% efficiency',
-      timestamp: '6 hours ago',
-      icon: TrendingUp,
-      color: 'blue'
-    },
-    {
-      id: 3,
-      type: 'achievement',
-      title: 'Achievement unlocked',
-      description: 'Green Producer badge earned',
-      timestamp: '1 day ago',
-      icon: Award,
-      color: 'purple'
-    },
-    {
-      id: 4,
-      type: 'facility',
-      title: 'Facility updated',
-      description: 'Wind Farm Beta capacity increased to 200MW',
-      timestamp: '2 days ago',
-      icon: Zap,
-      color: 'orange'
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'Pending': return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'Under Review': return <FileText className="w-4 h-4 text-blue-500" />;
+      case 'Approved': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'Rejected': return <XCircle className="w-4 h-4 text-red-500" />;
+      default: return <Clock className="w-4 h-4 text-gray-500" />;
     }
-  ];
+  };
 
-  if (loading) {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Pending': return 'bg-yellow-100 text-yellow-800';
+      case 'Under Review': return 'bg-blue-100 text-blue-800';
+      case 'Approved': return 'bg-green-100 text-green-800';
+      case 'Rejected': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-green-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">Loading dashboard...</p>
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Please Login</h3>
+          <p className="text-gray-600">You need to login to access the dashboard</p>
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center bg-white rounded-2xl shadow-xl border border-red-200 p-8"
-        >
-          <AlertCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Error</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Retry
-          </button>
-        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
-        >
+    <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
+      <RequestCreditModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSubmit={handleRequestSubmit} 
+      />
+      
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <Zap className="text-green-600" />
-              Producer Dashboard
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Welcome back, {user?.name || 'Producer'}! Monitor your green energy production and credits.
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">Producer Dashboard</h1>
+            <p className="text-gray-600 mt-1">Manage your green hydrogen production and credit requests.</p>
           </div>
-          
-          <div className="flex items-center gap-2 mt-4 sm:mt-0">
-            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium flex items-center gap-1">
-              <Star className="w-4 h-4" />
-              {user?.stats?.level || 1} Level
-            </span>
-            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium flex items-center gap-1">
-              <Flame className="w-4 h-4" />
-              {user?.stats?.streak?.current || 0} Day Streak
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <StatsGrid stats={stats} />
-
-        {/* Charts and Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <ChartsSection chartData={chartData} />
-          </div>
-          <div>
-            <QuickActions actions={quickActions} />
-          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-sm hover:bg-green-700 transition-colors"
+          >
+            <PlusCircle className="w-5 h-5" />
+            Request Credit Minting
+          </button>
         </div>
 
-        {/* Recent Activities */}
-        <ActivityList activities={recentActivities} />
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+              <span className="text-red-800">Error: {error}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+            <span className="ml-2 text-gray-600">Loading dashboard data...</span>
+          </div>
+        )}
+
+        {/* Main Content */}
+        {!loading && (
+          <>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <Clock className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Pending Requests</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {requests.filter(r => r.status === 'Pending').length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Approved Credits</p>
+                    <p className="text-2xl font-bold text-gray-900">{credits.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <XCircle className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Rejected Requests</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {requests.filter(r => r.status === 'Rejected').length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <FileText className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Requests</p>
+                    <p className="text-2xl font-bold text-gray-900">{requests.length}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Requests Section */}
+            <div className="bg-white rounded-lg shadow mb-8">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900">Recent Requests</h2>
+              </div>
+              <div className="p-6">
+                {requests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No requests yet</h3>
+                    <p className="text-gray-600 mb-4">Submit your first credit request to get started</p>
+                    <button
+                      onClick={() => setIsModalOpen(true)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                    >
+                      Submit Request
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {requests.slice(0, 5).map((request) => (
+                      <div key={request._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-2">
+                            <span className="text-sm font-medium text-gray-900 mr-2">
+                              {request.requestId}
+                            </span>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                              {getStatusIcon(request.status)}
+                              <span className="ml-1">{request.status}</span>
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {request.energyAmountMWh} MWh • {request.facilityName} • {new Date(request.productionDate).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {new Date(request.audit.submittedAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Approved Credits Section */}
+            {credits.length > 0 && (
+              <div className="bg-white rounded-lg shadow">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-medium text-gray-900">My Credits (Blockchain Approved)</h2>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4">
+                    {credits.map((credit) => (
+                      <div key={credit._id} className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-2">
+                            <span className="text-sm font-medium text-gray-900 mr-2">
+                              {credit.creditId || credit._id}
+                            </span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Certified
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {credit.energyAmountMWh} MWh • {credit.facilityName} • {new Date(credit.productionDate).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Token: {credit.tokenId || 'Pending'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

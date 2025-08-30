@@ -1,8 +1,11 @@
 const Credit = require('../models/credit.model');
+const Request = require('../models/request.model');
 const Facility = require('../models/facility.model');
 const Transaction = require('../models/transaction.model');
 const { ProductionAnalytics } = require('../models/analytics.model');
 const { Achievement, UserAchievement } = require('../models/achievement.model');
+const notificationService = require('../../services/notification.service');
+const User = require('../models/user.model');
 
 // @desc    Request minting for a new credit
 // @route   POST /api/producer/credits
@@ -11,7 +14,6 @@ exports.requestCreditMinting = async (req, res) => {
     productionDate, 
     energyAmountMWh, 
     proofDocumentUrl,
-    creditId,
     facilityName,
     facilityLocation,
     energySource,
@@ -19,24 +21,88 @@ exports.requestCreditMinting = async (req, res) => {
   } = req.body;
   
   try {
-    const newCredit = new Credit({
-      producer: req.user._id, // from auth middleware
+    // Generate unique request ID
+    const requestId = Request.generateRequestId();
+    
+    // Create new request
+    const newRequest = new Request({
+      requestId,
+      producer: req.user._id,
       productionDate,
       energyAmountMWh,
       proofDocumentUrl,
-      creditId,
       facilityName,
       facilityLocation,
       energySource,
       additionalDocuments: additionalDocuments || [],
       status: 'Pending',
+      metadata: {
+        priority: 'Normal',
+        source: 'Web Portal'
+      }
     });
 
-    const savedCredit = await newCredit.save();
-    res.status(201).json({ success: true, data: savedCredit });
+    const savedRequest = await newRequest.save();
+
+    // Send notification to producer
+    await notificationService.notifyCreditRequestSubmitted(
+      req.user._id,
+      savedRequest._id,
+      {
+        energyAmountMWh,
+        energySource,
+        facilityName,
+        facilityLocation,
+        productionDate
+      }
+    );
+
+    // Find available certifiers and assign one (or notify all)
+    const certifiers = await User.find({ 
+      role: 'Certifier',
+      'preferences.notifications.email': true 
+    });
+
+    // For now, notify all certifiers. In a more sophisticated system,
+    // you might assign to a specific certifier based on workload, specialization, etc.
+    for (const certifier of certifiers) {
+      await notificationService.notifyCertifierNewRequest(
+        certifier._id,
+        savedRequest._id,
+        {
+          energyAmountMWh,
+          energySource,
+          facilityName,
+          facilityLocation,
+          productionDate
+        },
+        req.user.name
+      );
+    }
+
+    res.status(201).json({ 
+      success: true, 
+      data: savedRequest,
+      message: 'Credit request submitted successfully. You will be notified once it is reviewed.'
+    });
   } catch (error) {
+    console.error('Error in requestCreditMinting:', error);
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
+};
+
+// @desc    Get all requests for the logged-in producer
+// @route   GET /api/producer/requests
+exports.getProducerRequests = async (req, res) => {
+    try {
+        const requests = await Request.find({ producer: req.user._id })
+            .populate('assignedCertifier', 'name email')
+            .populate('review.reviewedBy', 'name email')
+            .sort({ 'audit.submittedAt': -1 });
+        res.status(200).json({ success: true, data: requests });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
 };
 
 // @desc    Get all credits for the logged-in producer
@@ -182,4 +248,26 @@ exports.getAchievements = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
+};
+
+// @desc    Update producer wallet address
+// @route   PUT /api/producer/wallet  
+exports.updateWalletAddress = async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+    
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { walletAddress },
+      { new: true }
+    );
+    
+    res.status(200).json({
+      success: true,
+      message: 'Wallet address updated successfully',
+      data: { walletAddress: user.walletAddress }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
 };

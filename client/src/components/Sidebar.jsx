@@ -39,6 +39,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           ...commonItems,
           { path: '/production', icon: Factory, label: 'Production', color: 'green' },
           { path: '/credits', icon: CreditCard, label: 'My Credits', color: 'green' },
+          { path: '/producer/requests', icon: FileText, label: 'My Requests', color: 'orange' },
           { path: '/analytics', icon: BarChart3, label: 'Analytics', color: 'blue' },
           { path: '/achievements', icon: Award, label: 'Achievements', color: 'orange' },
         ];
@@ -48,7 +49,8 @@ const Sidebar = ({ isOpen, onClose }) => {
         return [
           ...commonItems,
           { path: '/verification', icon: Shield, label: 'Verification', color: 'purple' },
-          { path: '/requests', icon: FileText, label: 'Pending Requests', color: 'orange' },
+          { path: '/certifier/requests', icon: FileText, label: 'Review Requests', color: 'orange' },
+          { path: '/requests', icon: FileText, label: 'All Requests', color: 'orange' },
           { path: '/fraud-detection', icon: AlertTriangle, label: 'Fraud Detection', color: 'red' },
           { path: '/reports', icon: BarChart3, label: 'Reports', color: 'blue' },
         ];

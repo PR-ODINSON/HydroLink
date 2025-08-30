@@ -1,8 +1,26 @@
 const Credit = require('../models/credit.model');
+const Request = require('../models/request.model');
 const User = require('../models/user.model');
 const { mintCredit } = require('../../services/blockchain.service');
+const notificationService = require('../../services/notification.service');
 
-// @desc    Get all credits pending certification
+// @desc    Get all requests pending certification
+// @route   GET /api/certifier/requests/pending
+exports.getPendingRequests = async (req, res) => {
+    try {
+        const pendingRequests = await Request.find({ 
+            status: { $in: ['Pending', 'Under Review'] } 
+        })
+        .populate('producer', 'name email walletAddress')
+        .populate('assignedCertifier', 'name email')
+        .sort({ 'audit.submittedAt': 1 }); // Oldest first
+        res.status(200).json({ success: true, data: pendingRequests });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Get all credits pending certification (legacy endpoint)
 // @route   GET /api/certifier/credits/pending
 exports.getPendingCredits = async (req, res) => {
     try {
@@ -13,7 +31,153 @@ exports.getPendingCredits = async (req, res) => {
     }
 };
 
-// @desc    Approve a credit and mint it on the blockchain
+// @desc    Approve a request and mint it on the blockchain
+// @route   POST /api/certifier/requests/:id/approve
+exports.approveRequest = async (req, res) => {
+    const requestId = req.params.id;
+    const { comments = '' } = req.body || {};
+    
+    try {
+        const request = await Request.findById(requestId);
+        if (!request || !['Pending', 'Under Review'].includes(request.status)) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Request not found or not in pending/under review state.' 
+            });
+        }
+
+        const producer = await User.findById(request.producer);
+        if (!producer || !producer.walletAddress) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Producer wallet address not found.' 
+            });
+        }
+
+        // Approve the request
+        await request.approve(req.user._id, comments);
+
+        // Create credit from approved request
+        const creditData = request.toCreditData();
+        const newCredit = new Credit(creditData);
+        await newCredit.save();
+
+        // Mint on blockchain
+        const metadataUri = `${process.env.API_URL || 'https://api.hydrolink.com'}/credits/${newCredit._id}/metadata`;
+        const mintResult = await mintCredit(producer.walletAddress, metadataUri);
+        
+        if (!mintResult.success) {
+            // If blockchain minting fails, we should handle this gracefully
+            console.error('Blockchain minting failed:', mintResult.error);
+            // For now, we'll still mark the credit as certified but note the blockchain issue
+            newCredit.status = 'Certified';
+            newCredit.blockchainError = mintResult.error;
+        } else {
+            // Update credit with blockchain data
+            newCredit.tokenId = mintResult.tokenId;
+            newCredit.blockchain = {
+                txHash: mintResult.txHash,
+                blockNumber: mintResult.blockNumber,
+                network: 'polygon'
+            };
+        }
+
+        await newCredit.save();
+
+        // Send notification to producer
+        await notificationService.notifyProducerRequestApproved(
+            request.producer,
+            request._id,
+            newCredit.tokenId || 'Pending',
+            req.user.name
+        );
+
+        // Remove the request from the database as per workflow
+        await Request.findByIdAndDelete(requestId);
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Request approved and credit minted successfully.', 
+            data: {
+                credit: newCredit,
+                tokenId: newCredit.tokenId
+            }
+        });
+    } catch (error) {
+        console.error('Error in approveRequest:', error);
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Reject a request
+// @route   POST /api/certifier/requests/:id/reject
+exports.rejectRequest = async (req, res) => {
+    const requestId = req.params.id;
+    const { reason, details = '' } = req.body;
+    
+    try {
+        const request = await Request.findById(requestId);
+        if (!request || !['Pending', 'Under Review'].includes(request.status)) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Request not found or not in pending/under review state.' 
+            });
+        }
+
+        // Reject the request
+        await request.reject(req.user._id, reason, details);
+
+        // Send notification to producer
+        await notificationService.notifyProducerRequestRejected(
+            request.producer,
+            request._id,
+            reason,
+            details,
+            req.user.name
+        );
+
+        // Remove the request from the database as per workflow
+        await Request.findByIdAndDelete(requestId);
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Request rejected successfully.' 
+        });
+    } catch (error) {
+        console.error('Error in rejectRequest:', error);
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Assign a request to a certifier
+// @route   POST /api/certifier/requests/:id/assign
+exports.assignRequest = async (req, res) => {
+    const requestId = req.params.id;
+    
+    try {
+        const request = await Request.findById(requestId);
+        if (!request || request.status !== 'Pending') {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Request not found or not in pending state.' 
+            });
+        }
+
+        // Assign the request to the current certifier
+        await request.assignCertifier(req.user._id);
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Request assigned successfully.',
+            data: request
+        });
+    } catch (error) {
+        console.error('Error in assignRequest:', error);
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Approve a credit and mint it on the blockchain (legacy endpoint)
 // @route   POST /api/certifier/credits/:id/approve
 exports.approveCredit = async (req, res) => {
     const creditId = req.params.id;
@@ -67,11 +231,13 @@ exports.getDashboardStats = async (req, res) => {
             status: 'Certified'
         });
 
-        // Get pending credits count
-        const pendingCount = await Credit.countDocuments({ status: 'Pending' });
+        // Get pending requests count
+        const pendingCount = await Request.countDocuments({ 
+            status: { $in: ['Pending', 'Under Review'] } 
+        });
 
-        // Get rejected credits count
-        const rejectedCount = await Credit.countDocuments({ status: 'Rejected' });
+        // Get rejected requests count (from audit trail or separate tracking)
+        const rejectedCount = 0; // This would need to be tracked separately or in audit logs
 
         // Get total credits verified
         const totalVerified = await Credit.countDocuments({ status: 'Certified' });

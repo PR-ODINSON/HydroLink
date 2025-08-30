@@ -1,478 +1,295 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Shield, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  AlertTriangle,
-  Eye,
-  FileText,
-  Users,
-  TrendingUp,
-  Activity,
-  Search,
-  Filter,
-  Loader2
-} from 'lucide-react';
-import StatsGrid from '../../components/dashboard/StatsGrid';
-import ChartsSection from '../../components/dashboard/ChartsSection';
-import ActivityList from '../../components/dashboard/ActivityList';
-import QuickActions from '../../components/dashboard/QuickActions';
+import { CheckCircle, XCircle, Clock, FileText, Loader2, AlertCircle, Eye, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const CertifierDashboard = () => {
   const { user } = useAuth();
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [stats, setStats] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [processingRequest, setProcessingRequest] = useState(null);
 
+  // Fetch pending requests
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchPendingRequests = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/certifier/dashboard', {
+        const response = await fetch('/api/certifier/requests/pending', {
           credentials: 'include'
         });
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
-        
+        if (response.ok) {
         const data = await response.json();
-        
         if (data.success) {
-          const dashboardData = data.data;
-          
-          // Transform API data into stats format
-          const transformedStats = [
-            {
-              title: "Credits Verified",
-              value: dashboardData.stats?.creditsVerified?.toString() || "0",
-              icon: Shield,
-              trend: "up",
-              trendValue: "+12.3%",
-              color: "blue",
-              subtitle: "Total verified"
-            },
-            {
-              title: "Pending Requests",
-              value: dashboardData.stats?.pendingRequests?.toString() || "0",
-              icon: Clock,
-              trend: "down",
-              trendValue: "-5.2%",
-              color: "orange",
-              subtitle: "Awaiting review"
-            },
-            {
-              title: "Approval Rate",
-              value: `${dashboardData.stats?.approvalRate?.toFixed(1) || '0'}%`,
-              icon: CheckCircle,
-              trend: "up",
-              trendValue: "+1.8%",
-              color: "green",
-              subtitle: "Quality score"
-            },
-            {
-              title: "Fraud Detected",
-              value: dashboardData.stats?.fraudDetected?.toString() || "0",
-              icon: AlertTriangle,
-              trend: "down",
-              trendValue: "-50%",
-              color: "red",
-              subtitle: "This month"
-            }
-          ];
-          
-          setStats(transformedStats);
-        }
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError(err.message);
-        // Fallback to default stats if API fails
-        setStats([
-          {
-            title: "Credits Verified",
-            value: "0",
-            icon: Shield,
-            trend: "stable",
-            trendValue: "0%",
-            color: "blue",
-            subtitle: "Total verified"
-          },
-          {
-            title: "Pending Requests",
-            value: "0",
-            icon: Clock,
-            trend: "stable",
-            trendValue: "0%",
-            color: "orange",
-            subtitle: "Awaiting review"
-          },
-          {
-            title: "Approval Rate",
-            value: "0%",
-            icon: CheckCircle,
-            trend: "stable",
-            trendValue: "0%",
-            color: "green",
-            subtitle: "Quality score"
-          },
-          {
-            title: "Fraud Detected",
-            value: "0",
-            icon: AlertTriangle,
-            trend: "stable",
-            trendValue: "0%",
-            color: "red",
-            subtitle: "This month"
+            setPendingRequests(data.data || []);
           }
-        ]);
+        }
+      } catch (error) {
+        console.error('Error fetching pending requests:', error);
+        setError('Failed to load pending requests');
       } finally {
         setLoading(false);
       }
     };
 
     if (user) {
-      fetchDashboardData();
+      fetchPendingRequests();
     }
   }, [user]);
 
-  // Mock data for charts (can be replaced with real data later)
-  const charts = [
-    {
-      type: 'area',
-      title: 'Verification Trends',
-      data: [
-        { name: 'Jan', verified: 720, pending: 45 },
-        { name: 'Feb', verified: 890, pending: 32 },
-        { name: 'Mar', verified: 1050, pending: 28 },
-        { name: 'Apr', verified: 1180, pending: 35 },
-        { name: 'May', verified: 1320, pending: 23 },
-        { name: 'Jun', verified: 1420, pending: 23 }
-      ],
-      xKey: 'name',
-      yKey: 'verified',
-      color: '#3b82f6',
-      gradient: true,
-      height: 320
-    },
-    {
-      type: 'pie',
-      title: 'Verification Status',
-      data: [
-        { name: 'Approved', value: 847, color: '#10b981' },
-        { name: 'Rejected', value: 53, color: '#ef4444' },
-        { name: 'Under Review', value: 23, color: '#f59e0b' }
-      ],
-      xKey: 'name',
-      yKey: 'value',
-      height: 320
-    }
-  ];
+  const handleApprove = async (requestId) => {
+    try {
+      setProcessingRequest(requestId);
+      
+      const response = await fetch(`/api/certifier/requests/${requestId}/approve`, {
+        method: 'POST',
+        credentials: 'include'
+      });
 
-  const pendingRequests = [
-    {
-      id: 'CR-2025-001',
-      producer: 'GreenTech Industries',
-      amount: '450 credits',
-      productionDate: '2025-01-15',
-      facility: 'Solar H2 Plant Delta',
-      priority: 'high',
-      submittedAt: '2 hours ago',
-      riskScore: 'low'
-    },
-    {
-      id: 'CR-2025-002', 
-      producer: 'EcoEnergy Corp',
-      amount: '320 credits',
-      productionDate: '2025-01-14',
-      facility: 'Wind H2 Plant Alpha',
-      priority: 'medium',
-      submittedAt: '4 hours ago',
-      riskScore: 'medium'
-    },
-    {
-      id: 'CR-2025-003',
-      producer: 'HydroGen Solutions',
-      amount: '680 credits',
-      productionDate: '2025-01-13',
-      facility: 'Hydro H2 Plant Beta',
-      priority: 'high',
-      submittedAt: '6 hours ago',
-      riskScore: 'low'
-    }
-  ];
+      const result = await response.json();
 
-  const activities = [
-    {
-      id: 1,
-      type: 'approve',
-      description: 'Approved 320 credits from EcoEnergy Corp',
-      amount: '320 credits',
-      time: '1 hour ago',
-      status: 'completed'
-    },
-    {
-      id: 2,
-      type: 'reject',
-      description: 'Rejected credits due to incomplete documentation',
-      amount: '150 credits',
-      time: '3 hours ago',
-      status: 'completed'
-    },
-    {
-      id: 3,
-      type: 'fraud',
-      description: 'Flagged suspicious activity in CR-2025-XXX',
-      time: '5 hours ago',
-      status: 'pending'
-    },
-    {
-      id: 4,
-      type: 'review',
-      description: 'Started verification of SolarMax Energy credits',
-      amount: '450 credits',
-      time: '1 day ago',
-      status: 'completed'
-    }
-  ];
-
-  const quickActions = [
-    {
-      label: 'Review Pending Requests',
-      icon: FileText,
-      color: 'blue',
-      onClick: () => console.log('Review requests')
-    },
-    {
-      label: 'Fraud Detection Report',
-      icon: AlertTriangle,
-      color: 'red',
-      onClick: () => console.log('View fraud report')
-    },
-    {
-      label: 'Verification History',
-      icon: Shield,
-      color: 'green',
-      onClick: () => console.log('View history')
-    },
-    {
-      label: 'Producer Analytics',
-      icon: Users,
-      color: 'purple',
-      onClick: () => console.log('View analytics')
-    }
-  ];
-
-  const handleApprove = (requestId) => {
-    console.log('Approving request:', requestId);
-    // Handle approval logic
-  };
-
-  const handleReject = (requestId) => {
-    console.log('Rejecting request:', requestId);
-    // Handle rejection logic
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      if (response.ok && result.success) {
+        // Remove the approved request from the list
+        setPendingRequests(prev => prev.filter(req => req._id !== requestId));
+        alert('Request approved successfully! Blockchain credit has been minted.');
+      } else {
+        throw new Error(result.message || 'Failed to approve request');
+      }
+    } catch (error) {
+      console.error('Error approving request:', error);
+      alert('Error approving request: ' + error.message);
+    } finally {
+      setProcessingRequest(null);
     }
   };
 
-  const getRiskColor = (risk) => {
-    switch (risk) {
-      case 'high': return 'text-red-600';
-      case 'medium': return 'text-yellow-600';
-      case 'low': return 'text-green-600';
-      default: return 'text-gray-600';
+  const handleReject = async (requestId) => {
+    try {
+      setProcessingRequest(requestId);
+      
+      const response = await fetch(`/api/certifier/requests/${requestId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          rejectionReason: 'Did not meet certification requirements'
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Remove the rejected request from the list
+        setPendingRequests(prev => prev.filter(req => req._id !== requestId));
+        alert('Request rejected successfully. Producer has been notified.');
+      } else {
+        throw new Error(result.message || 'Failed to reject request');
+      }
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+      alert('Error rejecting request: ' + error.message);
+    } finally {
+      setProcessingRequest(null);
     }
   };
 
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case 'approve': return <CheckCircle className="w-4 h-4" />;
-      case 'reject': return <XCircle className="w-4 h-4" />;
-      case 'fraud': return <AlertTriangle className="w-4 h-4" />;
-      case 'review': return <Eye className="w-4 h-4" />;
-      default: return <Activity className="w-4 h-4" />;
-    }
-  };
-
-  const getActivityColor = (type) => {
-    switch (type) {
-      case 'approve': return 'text-green-600 bg-green-100';
-      case 'reject': return 'text-red-600 bg-red-100';
-      case 'fraud': return 'text-orange-600 bg-orange-100';
-      case 'review': return 'text-blue-600 bg-blue-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Please Login</h3>
+          <p className="text-gray-600">You need to login to access the dashboard</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Certifier Dashboard
-        </h1>
-        <p className="text-gray-600">
-          Verify and validate hydrogen credit authenticity and compliance.
-        </p>
-      </motion.div>
-
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-          <span className="ml-2 text-gray-600">Loading dashboard data...</span>
+    <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Certifier Dashboard</h1>
+          <p className="text-gray-600 mt-1">Review and approve green hydrogen credit requests.</p>
         </div>
-      )}
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Clock className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Pending Requests</p>
+                <p className="text-2xl font-bold text-gray-900">{pendingRequests.length}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Approved Today</p>
+                <p className="text-2xl font-bold text-gray-900">0</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Active Producers</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {new Set(pendingRequests.map(req => req.producer)).size}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
       {/* Error State */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
           <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
+              <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
             <span className="text-red-800">Error: {error}</span>
           </div>
         </div>
       )}
 
-      {/* Dashboard Content */}
-      {!loading && (
-        <>
-          {/* Stats Grid */}
-          <StatsGrid stats={stats} className="mb-8" />
-
-          {/* Fraud Alert */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-400 p-4 rounded-xl mb-8"
-      >
-        <div className="flex items-center">
-          <AlertTriangle className="w-6 h-6 text-red-600 mr-3" />
-          <div>
-            <h3 className="text-sm font-medium text-red-800">
-              Fraud Detection Alert
-            </h3>
-            <p className="text-sm text-red-700 mt-1">
-              AI system detected 2 potentially fraudulent submissions. Immediate review required.
-            </p>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+            <span className="ml-2 text-gray-600">Loading pending requests...</span>
           </div>
-          <button className="ml-auto bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
-            Review Now
-          </button>
-        </div>
-      </motion.div>
+        )}
 
-      {/* Pending Verification Requests */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Pending Verification Requests</h3>
-          <div className="flex items-center space-x-2">
-            <button className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
-              <Search className="w-4 h-4" />
-            </button>
-            <button className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
-              <Filter className="w-4 h-4" />
-            </button>
+        {/* Pending Requests Section */}
+        {!loading && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">Pending Credit Requests</h2>
           </div>
+            <div className="p-6">
+              {pendingRequests.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No pending requests</h3>
+                  <p className="text-gray-600">All credit requests have been processed.</p>
         </div>
-
-        <div className="space-y-4">
+              ) : (
+                <div className="space-y-6">
           {pendingRequests.map((request) => (
-            <div key={request.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <h4 className="font-medium text-gray-900">{request.id}</h4>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(request.priority)}`}>
-                    {request.priority} priority
+                    <div key={request._id} className="border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          {/* Request Header */}
+                          <div className="flex items-center mb-3">
+                            <span className="text-lg font-medium text-gray-900 mr-3">
+                              {request.requestId}
                   </span>
-                  <span className={`text-xs font-medium ${getRiskColor(request.riskScore)}`}>
-                    {request.riskScore} risk
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              <Clock className="w-3 h-3 mr-1" />
+                              {request.status}
                   </span>
                 </div>
-                <span className="text-sm text-gray-500">{request.submittedAt}</span>
+
+                          {/* Request Details */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <p className="text-sm text-gray-600">Energy Amount</p>
+                              <p className="text-lg font-semibold text-gray-900">{request.energyAmountMWh} MWh</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">Production Date</p>
+                              <p className="text-lg font-semibold text-gray-900">
+                                {new Date(request.productionDate).toLocaleDateString()}
+                              </p>
+              </div>
+                <div>
+                              <p className="text-sm text-gray-600">Facility</p>
+                              <p className="text-lg font-semibold text-gray-900">{request.facilityName}</p>
+                </div>
+                <div>
+                              <p className="text-sm text-gray-600">Energy Source</p>
+                              <p className="text-lg font-semibold text-gray-900">{request.energySource}</p>
+                </div>
+                <div>
+                              <p className="text-sm text-gray-600">Location</p>
+                              <p className="text-lg font-semibold text-gray-900">{request.facilityLocation}</p>
+                </div>
+                <div>
+                              <p className="text-sm text-gray-600">Submitted</p>
+                              <p className="text-lg font-semibold text-gray-900">
+                                {new Date(request.audit.submittedAt).toLocaleDateString()}
+                              </p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <p className="text-xs text-gray-500">Producer</p>
-                  <p className="text-sm font-medium">{request.producer}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Amount</p>
-                  <p className="text-sm font-medium">{request.amount}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Production Date</p>
-                  <p className="text-sm font-medium">{request.productionDate}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Facility</p>
-                  <p className="text-sm font-medium">{request.facility}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center">
+                          {/* Proof Document */}
+                          {request.proofDocumentUrl && (
+                            <div className="mb-4">
+                              <p className="text-sm text-gray-600 mb-2">Proof Document</p>
+                              <a
+                                href={request.proofDocumentUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-blue-600 hover:text-blue-700"
+                              >
                   <Eye className="w-4 h-4 mr-1" />
-                  View Details
-                </button>
-                <div className="flex space-x-2">
+                                View Document
+                              </a>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col gap-2 ml-6">
                   <button
-                    onClick={() => handleReject(request.id)}
-                    className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
-                  >
-                    Reject
+                            onClick={() => handleApprove(request._id)}
+                            disabled={processingRequest === request._id}
+                            className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {processingRequest === request._id ? (
+                              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            ) : (
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                            )}
+                            Approve
                   </button>
                   <button
-                    onClick={() => handleApprove(request.id)}
-                    className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors"
-                  >
-                    Approve
+                            onClick={() => handleReject(request._id)}
+                            disabled={processingRequest === request._id}
+                            className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {processingRequest === request._id ? (
+                              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            ) : (
+                              <XCircle className="w-4 h-4 mr-1" />
+                            )}
+                            Reject
                   </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      </motion.div>
-
-      {/* Charts Section */}
-      <ChartsSection charts={charts} className="mb-8" />
-
-      {/* Activity and Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
-        <ActivityList
-          activities={activities}
-          title="Recent Verifications"
-          getActivityIcon={getActivityIcon}
-          getActivityColor={getActivityColor}
-          className="lg:col-span-2"
-        />
-
-        {/* Quick Actions */}
-        <QuickActions actions={quickActions} title="Verification Tools" />
+              )}
+            </div>
+          </div>
+        )}
       </div>
-        </>
-      )}
     </div>
   );
 };

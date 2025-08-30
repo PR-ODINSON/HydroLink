@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Leaf, Bell, User, Menu, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationCenter from './NotificationCenter';
 
 const Navbar = ({ onMenuClick }) => {
   const location = useLocation();
@@ -9,6 +10,8 @@ const Navbar = ({ onMenuClick }) => {
   const { user, isAuthenticated, logout, removeCookie } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeSection, setActiveSection] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   const isActive = (path) => location.pathname === path;
 
@@ -56,6 +59,32 @@ const Navbar = ({ onMenuClick }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isActive]);
+
+  // Fetch notification count
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const fetchNotificationCount = async () => {
+        try {
+          const response = await fetch('/api/notifications/count', {
+            credentials: 'include'
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              setUnreadCount(data.data.unreadCount);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching notification count:', error);
+        }
+      };
+
+      fetchNotificationCount();
+      // Poll for updates every 30 seconds
+      const interval = setInterval(fetchNotificationCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, user]);
 
   const handleLogout = async () => {
     try {
@@ -205,11 +234,16 @@ const Navbar = ({ onMenuClick }) => {
             {isAuthenticated ? (
               <>
                 {/* Notifications */}
-                <button className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors relative">
+                <button 
+                  onClick={() => setShowNotifications(true)}
+                  className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors relative"
+                >
                   <Bell size={20} />
-                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    3
-                  </span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </button>
 
                 {/* User Menu */}
@@ -278,6 +312,12 @@ const Navbar = ({ onMenuClick }) => {
           </div>
         </div>
       </div>
+      
+      {/* Notification Center */}
+      <NotificationCenter 
+        isOpen={showNotifications} 
+        onClose={() => setShowNotifications(false)} 
+      />
     </nav>
   );
 };
