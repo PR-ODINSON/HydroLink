@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
-import Footer from './components/Footer';
+
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -17,26 +17,32 @@ import Leaderboard from './pages/Leaderboard';
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const isLandingPage = location.pathname === '/';
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isLandingPage = location.pathname === '/';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50">
-      {!isLandingPage && !isAuthPage && (
+      {!isAuthPage && (
         <>
           <Navbar onMenuClick={() => setSidebarOpen(true)} />
-          <div className="flex">
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-            <main className="flex-1 md:ml-0 min-h-screen">
+          {!isLandingPage && (
+            <div className="flex">
+              <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+              <main className="flex-1 overflow-y-auto h-screen pt-16">
+                {children}
+              </main>
+            </div>
+          )}
+          {isLandingPage && (
+            <main className="min-h-screen pt-16">
               {children}
             </main>
-          </div>
+          )}
         </>
       )}
-      {(isLandingPage || isAuthPage) && (
+      {isAuthPage && (
         <>
           {children}
-          {isLandingPage && <Footer />}
         </>
       )}
     </div>

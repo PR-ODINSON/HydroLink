@@ -32,7 +32,7 @@ const Navbar = ({ onMenuClick }) => {
   };
   
   return (
-    <nav className="bg-white/80 backdrop-blur-lg border-b border-green-100 shadow-sm sticky top-0 z-50">
+    <nav className="bg-white/80 backdrop-blur-lg border-b border-green-100 shadow-sm fixed w-full top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -67,36 +67,79 @@ const Navbar = ({ onMenuClick }) => {
             >
               Home
             </Link>
-            <Link
-              to="/dashboard"
-              className={`text-sm font-medium transition-colors ${
-                isActive('/dashboard') 
-                  ? 'text-green-600 border-b-2 border-green-600' 
-                  : 'text-gray-600 hover:text-green-600'
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/explorer"
-              className={`text-sm font-medium transition-colors ${
-                isActive('/explorer') 
-                  ? 'text-green-600 border-b-2 border-green-600' 
-                  : 'text-gray-600 hover:text-green-600'
-              }`}
-            >
-              Explorer
-            </Link>
-            <Link
-              to="/leaderboard"
-              className={`text-sm font-medium transition-colors ${
-                isActive('/leaderboard') 
-                  ? 'text-green-600 border-b-2 border-green-600' 
-                  : 'text-gray-600 hover:text-green-600'
-              }`}
-            >
-              Leaderboard
-            </Link>
+            {/* Landing page navigation links - only show on home page */}
+            {isActive('/') && (
+              <>
+                <button
+                  onClick={() => {
+                    const element = document.getElementById('features');
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="text-sm font-medium text-gray-600 hover:text-green-600 transition-colors cursor-pointer"
+                >
+                  Features
+                </button>
+                <button
+                  onClick={() => {
+                    const element = document.getElementById('about');
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="text-sm font-medium text-gray-600 hover:text-green-600 transition-colors cursor-pointer"
+                >
+                  About
+                </button>
+                <button
+                  onClick={() => {
+                    const element = document.getElementById('contact');
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="text-sm font-medium text-gray-600 hover:text-green-600 transition-colors cursor-pointer"
+                >
+                  Contact
+                </button>
+              </>
+            )}
+            {/* Dashboard navigation links - only show when authenticated AND NOT on landing page */}
+            {isAuthenticated && !isActive('/') && (
+              <>
+                <Link
+                  to="/dashboard"
+                  className={`text-sm font-medium transition-colors ${
+                    isActive('/dashboard') 
+                      ? 'text-green-600 border-b-2 border-green-600' 
+                      : 'text-gray-600 hover:text-green-600'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/explorer"
+                  className={`text-sm font-medium transition-colors ${
+                    isActive('/explorer') 
+                      ? 'text-green-600 border-b-2 border-green-600' 
+                      : 'text-gray-600 hover:text-green-600'
+                  }`}
+                >
+                  Explorer
+                </Link>
+                <Link
+                  to="/leaderboard"
+                  className={`text-sm font-medium transition-colors ${
+                    isActive('/leaderboard') 
+                      ? 'text-green-600 border-b-2 border-green-600' 
+                      : 'text-gray-600 hover:text-green-600'
+                  }`}
+                >
+                  Leaderboard
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Right side actions */}

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import Tilt from 'react-parallax-tilt';
+
 import { useAuth } from '../contexts/AuthContext';
+import Footer from '../components/Footer';
 import { 
   Leaf, 
   Shield, 
@@ -15,17 +17,10 @@ import {
   CheckCircle,
   ArrowRight,
   Play,
-  Menu,
-  X,
-  Moon,
-  Sun,
-  ExternalLink
+  X
 } from 'lucide-react';
 
 const Landing = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const { scrollY } = useScroll();
 
@@ -33,21 +28,13 @@ const Landing = () => {
   const y1 = useTransform(scrollY, [0, 300], [0, -50]);
   const y2 = useTransform(scrollY, [0, 300], [0, -100]);
 
-  // Handle scroll effects
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+
 
   // Smooth scroll function
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setIsMobileMenuOpen(false);
     }
   };
 
@@ -106,100 +93,7 @@ const Landing = () => {
     />
   );
 
-  // Enhanced Navigation Component
-  const Navigation = () => (
-    <nav 
-      className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out ${
-        isScrolled 
-          ? 'bg-white/95 backdrop-blur-xl border-b border-green-100 shadow-lg transform translate-y-0' 
-          : 'bg-white/80 backdrop-blur-lg border-b border-green-100/50'
-      } ${isDarkMode ? 'dark:bg-gray-900/95 dark:border-gray-700' : ''}`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <motion.div 
-            className="flex items-center space-x-2"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
-              <Leaf className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-              HydroLink
-            </span>
-          </motion.div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {['features', 'about', 'contact'].map((item) => (
-              <button
-                key={item}
-                onClick={() => scrollToSection(item)}
-                className="text-gray-600 hover:text-green-600 transition-colors duration-200 capitalize font-medium"
-              >
-                {item}
-              </button>
-            ))}
-            
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
-            >
-              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-
-            <Link 
-              to="/dashboard" 
-              className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-2 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            >
-              Get Started
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
-          >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white/95 backdrop-blur-lg border-t border-green-100"
-          >
-            <div className="px-4 py-6 space-y-4">
-              {['features', 'about', 'contact'].map((item) => (
-                <button
-                  key={item}
-                  onClick={() => scrollToSection(item)}
-                  className="block w-full text-left text-gray-600 hover:text-green-600 transition-colors duration-200 capitalize font-medium py-2"
-                >
-                  {item}
-                </button>
-              ))}
-              <Link 
-                to={isAuthenticated ? "/dashboard" : "/register"} 
-                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-2 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105"
-              >
-                {isAuthenticated ? "Go to Dashboard" : "Get Started"}
-              </Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
-  );
 
   // Video Modal Component
   const VideoModal = () => (
@@ -242,12 +136,12 @@ const Landing = () => {
   );
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
-      <Navigation />
+    <div className="min-h-screen">
+
       <VideoModal />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 min-h-screen flex items-center">
+      <section className="relative overflow-hidden pt-24 min-h-screen flex items-center">
         {/* Enhanced Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50" />
         <motion.div 
@@ -1027,6 +921,7 @@ const Landing = () => {
           </motion.div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 };
