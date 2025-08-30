@@ -1,84 +1,58 @@
-let ethers;
-try {
-  ethers = require('ethers');
-} catch (error) {
-  console.warn('Ethers.js not properly installed, blockchain features disabled');
-}
+// @/server/src/services/blockchain.service.js
+const { ethers } = require('ethers');
+const fs = require('fs');
+const path = require('path');
 
-// !! IMPORTANT !!
-// You need to create a JSON file with your contract's ABI
-// This is generated when you compile your smart contract with Hardhat
-let contractABI, provider, signer, contractAddress, greenCreditContract;
+// Load ABI
+const contractABI = require('../config/contractABI.json').abi;
 
-try {
-  contractABI = require('../config/contractABI.json');
-  
-  // Check if blockchain environment variables are configured and ethers is available
-  if (ethers && ethers.providers && process.env.BLOCKCHAIN_PROVIDER_URL && process.env.CONTRACT_OWNER_PRIVATE_KEY && process.env.GREEN_CREDIT_CONTRACT_ADDRESS) {
-    provider = new ethers.providers.JsonRpcProvider(process.env.BLOCKCHAIN_PROVIDER_URL);
-    signer = new ethers.Wallet(process.env.CONTRACT_OWNER_PRIVATE_KEY, provider);
-    contractAddress = process.env.GREEN_CREDIT_CONTRACT_ADDRESS;
-    greenCreditContract = new ethers.Contract(contractAddress, contractABI, signer);
-    console.log('Blockchain service initialized successfully');
-  } else {
-    console.warn('Blockchain environment variables not configured or ethers.js not available. Blockchain features will be disabled.');
-  }
-} catch (error) {
-  console.warn('Failed to initialize blockchain service:', error.message);
-  console.warn('Blockchain features will be disabled. Please configure your smart contract and environment variables.');
-}
+// Load env variables
+const CONTRACT_ADDRESS = process.env.GREEN_CREDIT_CONTRACT_ADDRESS;
+const PRIVATE_KEY = process.env.CONTRACT_OWNER_PRIVATE_KEY;
+const RPC_URL = process.env.BLOCKCHAIN_RPC_URL;
 
-const mintCredit = async (producerWalletAddress, metadataUri) => {
-  if (!greenCreditContract) {
-    console.warn('Blockchain service not initialized. Simulating credit minting...');
-    return { 
-      success: true, 
-      txHash: `0x${Math.random().toString(16).substr(2, 64)}`, // Mock transaction hash
-      message: 'Blockchain service not configured - credit minted in database only'
-    };
-  }
+// Setup provider and signer
+const provider = new ethers.JsonRpcProvider(RPC_URL);
+const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
+// Setup contract instance
+const contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, wallet);
+
+/**
+ * Mint a new GreenCredit NFT to a producer.
+ * @param {string} producerWalletAddress - The wallet address of the producer.
+ * @param {string} metadataUri - The metadata URI for the NFT.
+ * @returns {Promise<{ success: boolean, txHash: string, tokenId: string }>}
+ */
+async function mintCredit(producerWalletAddress, metadataUri) {
   try {
-    console.log(`Minting credit to: ${producerWalletAddress}`);
-    // Assuming your contract has a 'safeMint' function like most ERC721 contracts
-    const tx = await greenCreditContract.safeMint(producerWalletAddress, metadataUri);
-    await tx.wait(); // Wait for the transaction to be mined
-    console.log('Minting transaction successful:', tx.hash);
-    
-    // To get the tokenId, you might need to listen for an event or parse the transaction receipt
-    // This part is highly dependent on your smart contract implementation
-    // For now, we'll return the hash as a reference.
-    return { success: true, txHash: tx.hash };
+    const tx = await contract.safeMint(producerWalletAddress, metadataUri);
+    const receipt = await tx.wait();
+
+    // Find the Transfer event to get the tokenId
+    const transferEvent = receipt.logs
+      .map(log => {
+        try {
+          return contract.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find(e => e && e.name === 'Transfer');
+
+    const tokenId = transferEvent ? transferEvent.args.tokenId.toString() : null;
+
+    return {
+      success: true,
+      txHash: receipt.hash,
+      tokenId,
+    };
   } catch (error) {
-    console.error('Error minting credit on blockchain:', error);
-    return { success: false, error };
+    console.error('Minting failed:', error);
+    return { success: false, error: error.message };
   }
-};
-
-const retireCredit = async (tokenId) => {
-    if (!greenCreditContract) {
-        console.warn('Blockchain service not initialized. Simulating credit retirement...');
-        return { 
-            success: true, 
-            txHash: `0x${Math.random().toString(16).substr(2, 64)}`, // Mock transaction hash
-            message: 'Blockchain service not configured - credit retired in database only'
-        };
-    }
-
-    try {
-        console.log(`Retiring token ID: ${tokenId}`);
-        // Assuming your contract has a 'retire' or 'burn' function
-        const tx = await greenCreditContract.retire(tokenId);
-        await tx.wait();
-        console.log('Retire transaction successful:', tx.hash);
-        return { success: true, txHash: tx.hash };
-    } catch (error) {
-        console.error('Error retiring credit on blockchain:', error);
-        return { success: false, error };
-    }
-};
+}
 
 module.exports = {
   mintCredit,
-  retireCredit,
 };
