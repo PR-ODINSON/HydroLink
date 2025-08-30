@@ -1,8 +1,12 @@
 const Credit = require('../models/credit.model');
 const User = require('../models/user.model');
+const Request = require('../models/request.model');
+const Notification = require('../models/notification.model');
 const { mintCredit } = require('../../services/blockchain.service');
+const notificationService = require('../../services/notificationService');
+const { sendEmail } = require('../../services/emailService');
 
-// @desc    Get all credits pending certification
+// @desc    Get all credits pending certification (legacy)
 // @route   GET /api/certifier/credits/pending
 exports.getPendingCredits = async (req, res) => {
     try {
@@ -13,7 +17,7 @@ exports.getPendingCredits = async (req, res) => {
     }
 };
 
-// @desc    Approve a credit and mint it on the blockchain
+// @desc    Approve a credit and mint it on the blockchain (legacy)
 // @route   POST /api/certifier/credits/:id/approve
 exports.approveCredit = async (req, res) => {
     const creditId = req.params.id;
@@ -36,9 +40,101 @@ exports.approveCredit = async (req, res) => {
         credit.status = 'Certified';
         credit.certifier = req.user._id;
         credit.tokenId = mintResult.tokenId;
-        credit.txHash = mintResult.txHash;
+        credit.blockchain = { mintTxHash: mintResult.txHash };
         await credit.save();
         res.status(200).json({ success: true, message: 'Credit certified and minted successfully.', data: credit });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Get all pending credit requests
+// @route   GET /api/certifier/requests/pending
+exports.getPendingRequests = async (req, res) => {
+    try {
+        const pendingRequests = await Request.find({ status: 'Pending' })
+            .populate('producer', 'name email walletAddress');
+        res.status(200).json({ success: true, data: pendingRequests });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Approve a credit request, mint on blockchain, create Credit, notify producer, remove request
+// @route   POST /api/certifier/requests/:id/approve
+exports.approveRequest = async (req, res) => {
+    const requestId = req.params.id;
+    try {
+        const request = await Request.findById(requestId).populate('producer', 'walletAddress email name');
+        if (!request || request.status !== 'Pending') {
+            return res.status(404).json({ success: false, message: 'Request not found or not pending.' });
+        }
+        if (!request.producer.walletAddress) {
+            return res.status(400).json({ success: false, message: 'Producer wallet address not found.' });
+        }
+        // Mint on blockchain
+        const metadataUri = `https://api.yourproject.com/credits/request/${request._id}/metadata`;
+        const mintResult = await mintCredit(request.producer.walletAddress, metadataUri);
+        if (!mintResult.success) {
+            return res.status(500).json({ success: false, message: 'Blockchain minting failed.', error: mintResult.error });
+        }
+        // Create Credit entry
+        const newCredit = new Credit({
+            producer: request.producer._id,
+            productionDate: request.productionDate,
+            energyAmountMWh: request.energyAmountMWh,
+            proofDocumentUrl: request.proofDocumentUrl,
+            facilityName: request.facilityName,
+            facilityLocation: request.facilityLocation,
+            energySource: request.energySource,
+            additionalDocuments: request.additionalDocuments,
+            status: 'Certified',
+            certifier: req.user._id,
+            tokenId: mintResult.tokenId,
+            blockchain: { mintTxHash: mintResult.txHash },
+        });
+        await newCredit.save();
+        // Remove request
+        await request.deleteOne();
+        // Notify producer (in-app and email)
+        await notificationService.notifyProducerApproved(request.producer._id, newCredit);
+        if (request.producer.email) {
+            await sendEmail({
+                to: request.producer.email,
+                subject: 'Your Credit Request Has Been Approved',
+                text: 'Congratulations! Your credit request has been approved and minted on the blockchain.',
+                html: '<p>Congratulations! Your credit request has been <b>approved</b> and minted on the blockchain.</p>'
+            });
+        }
+        res.status(200).json({ success: true, message: 'Request approved, credit minted and certified.', data: newCredit });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Reject a credit request, notify producer, remove request
+// @route   POST /api/certifier/requests/:id/reject
+exports.rejectRequest = async (req, res) => {
+    const requestId = req.params.id;
+    const { reason } = req.body;
+    try {
+        const request = await Request.findById(requestId).populate('producer', 'email name');
+        if (!request || request.status !== 'Pending') {
+            return res.status(404).json({ success: false, message: 'Request not found or not pending.' });
+        }
+        // Remove request
+        await request.deleteOne();
+        // Notify producer (in-app and email)
+        await notificationService.notifyProducerRejected(request.producer._id, reason);
+        if (request.producer.email) {
+            await sendEmail({
+                to: request.producer.email,
+                subject: 'Your Credit Request Was Rejected',
+                text: `Your credit request was rejected. Reason: ${reason || 'No reason provided.'}`,
+                html: `<p>Your credit request was <b>rejected</b>.<br>Reason: ${reason || 'No reason provided.'}</p>`
+            });
+        }
+        res.status(200).json({ success: true, message: 'Request rejected and removed.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
@@ -105,4 +201,48 @@ exports.getDashboardStats = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
+};
+
+// @desc    Get all notifications for the logged-in certifier
+// @route   GET /api/certifier/notifications
+exports.getNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ user: req.user._id })
+      .sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: notifications });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Mark a notification as read
+// @route   PATCH /api/certifier/notifications/:id/read
+exports.markNotificationRead = async (req, res) => {
+  try {
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      { read: true },
+      { new: true }
+    );
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found.' });
+    }
+    res.status(200).json({ success: true, data: notification });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Mark all notifications as read
+// @route   PATCH /api/certifier/notifications/read-all
+exports.markAllNotificationsRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { user: req.user._id, read: false },
+      { $set: { read: true } }
+    );
+    res.status(200).json({ success: true, message: 'All notifications marked as read.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
 };

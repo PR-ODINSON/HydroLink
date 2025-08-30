@@ -2,7 +2,59 @@ const Credit = require('../models/credit.model');
 const Transaction = require('../models/transaction.model');
 const { PortfolioAnalytics } = require('../models/analytics.model');
 const { retireCredit, transferCredit, getTokenOwner } = require('../../services/blockchain.service');
+const Notification = require('../models/notification.model');
 
+// @desc    Get all available credits for purchase
+// @route   GET /api/buyer/credits/available
+exports.getAvailableCredits = async (req, res) => {
+    try {
+        const availableCredits = await Credit.find({ status: 'Certified' })
+            .populate('producer', 'name facilityName facilityLocation')
+            .sort({ createdAt: -1 });
+        res.status(200).json({ success: true, data: availableCredits });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Get purchase history for the buyer
+// @route   GET /api/buyer/credits/purchase-history
+exports.getPurchaseHistory = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const purchases = await Transaction.find({
+            to: userId,
+            type: 'Purchase',
+            status: 'Completed'
+        })
+        .populate('credit', 'creditId energyAmountMWh energySource facilityName')
+        .populate('from', 'name')
+        .sort({ createdAt: -1 });
+        
+        res.status(200).json({ success: true, data: purchases });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Get retired credits for the buyer
+// @route   GET /api/buyer/credits/retired
+exports.getRetiredCredits = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const retiredCredits = await Transaction.find({
+            from: userId,
+            type: 'Retirement',
+            status: 'Completed'
+        })
+        .populate('credit', 'creditId energyAmountMWh energySource facilityName')
+        .sort({ createdAt: -1 });
+        
+        res.status(200).json({ success: true, data: retiredCredits });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
 
 // @desc    Get all certified credits available for purchase/viewing
 // @route   GET /api/buyer/credits/marketplace
@@ -340,4 +392,48 @@ exports.purchaseCredit = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
+};
+
+// @desc    Get all notifications for the logged-in buyer
+// @route   GET /api/buyer/notifications
+exports.getNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ user: req.user._id })
+      .sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: notifications });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Mark a notification as read
+// @route   PATCH /api/buyer/notifications/:id/read
+exports.markNotificationRead = async (req, res) => {
+  try {
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      { read: true },
+      { new: true }
+    );
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found.' });
+    }
+    res.status(200).json({ success: true, data: notification });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Mark all notifications as read
+// @route   PATCH /api/buyer/notifications/read-all
+exports.markAllNotificationsRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { user: req.user._id, read: false },
+      { $set: { read: true } }
+    );
+    res.status(200).json({ success: true, message: 'All notifications marked as read.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
 };
