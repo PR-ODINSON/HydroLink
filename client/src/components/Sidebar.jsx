@@ -48,25 +48,14 @@ const Sidebar = ({ isOpen, onClose }) => {
       
       {/* Sidebar */}
       <div className={`
-        fixed left-0 top-0 h-full w-64 bg-white/95 backdrop-blur-lg border-r border-gray-200 
-        transform transition-transform duration-300 ease-in-out z-50
+        fixed left-0 top-0 pt-16 h-[30vh] w-64 bg-white/95 backdrop-blur-lg border-r border-gray-200 
+        transform transition-transform duration-300 ease-in-out z-40
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-        md:translate-x-0 md:static md:h-screen
+        md:translate-x-0 md:relative md:top-0 md:h-screen md:border-r-0
       `}>
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800">Navigation</h2>
-            <button 
-              onClick={onClose}
-              className="md:hidden p-1 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X size={20} />
-            </button>
-          </div>
-          
+        <div className="flex flex-col h-full overflow-hidden">
           {/* Menu Items */}
-          <nav className="flex-1 py-6">
+          <nav className="flex-1 py-6 min-h-0">
             <div className="space-y-1 px-3">
               {menuItems.map((item) => {
                 const Icon = item.icon;
@@ -89,15 +78,6 @@ const Sidebar = ({ isOpen, onClose }) => {
               })}
             </div>
           </nav>
-          
-          {/* Footer */}
-          <div className="p-6 border-t border-gray-200">
-            <div className="text-xs text-gray-500 text-center">
-              © 2024 HydroLink
-              <br />
-              Green Hydrogen Credits
-            </div>
-          </div>
         </div>
       </div>
     </>

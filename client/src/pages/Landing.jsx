@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import Tilt from 'react-parallax-tilt';
+
 import { useAuth } from '../contexts/AuthContext';
-import Navbar from "../components/Navbar"
+import Footer from '../components/Footer';
 import { 
   Leaf, 
   Shield, 
@@ -16,17 +17,10 @@ import {
   CheckCircle,
   ArrowRight,
   Play,
-  Menu,
-  X,
-  Moon,
-  Sun,
-  ExternalLink
+  X
 } from 'lucide-react';
 
 const Landing = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const { scrollY } = useScroll();
 
@@ -34,21 +28,13 @@ const Landing = () => {
   const y1 = useTransform(scrollY, [0, 300], [0, -50]);
   const y2 = useTransform(scrollY, [0, 300], [0, -100]);
 
-  // Handle scroll effects
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+
 
   // Smooth scroll function
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setIsMobileMenuOpen(false);
     }
   };
 
@@ -107,6 +93,8 @@ const Landing = () => {
     />
   );
 
+
+
   // Video Modal Component
   const VideoModal = () => (
     <AnimatePresence>
@@ -148,12 +136,12 @@ const Landing = () => {
   );
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
-      <Navbar />
+    <div className="min-h-screen">
+
       <VideoModal />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 min-h-screen flex items-center">
+      <section className="relative overflow-hidden pt-24 min-h-screen flex items-center">
         {/* Enhanced Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50" />
         <motion.div 
@@ -933,6 +921,7 @@ const Landing = () => {
           </motion.div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 };
