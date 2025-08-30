@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -58,12 +59,36 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/producer" element={<Producer />} />
-            <Route path="/authority" element={<Authority />} />
-            <Route path="/buyer" element={<Buyer />} />
-            <Route path="/explorer" element={<Explorer />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/producer" element={
+              <ProtectedRoute>
+                <Producer />
+              </ProtectedRoute>
+            } />
+            <Route path="/authority" element={
+              <ProtectedRoute>
+                <Authority />
+              </ProtectedRoute>
+            } />
+            <Route path="/buyer" element={
+              <ProtectedRoute>
+                <Buyer />
+              </ProtectedRoute>
+            } />
+            <Route path="/explorer" element={
+              <ProtectedRoute>
+                <Explorer />
+              </ProtectedRoute>
+            } />
+            <Route path="/leaderboard" element={
+              <ProtectedRoute>
+                <Leaderboard />
+              </ProtectedRoute>
+            } />
           </Routes>
         </Layout>
       </Router>

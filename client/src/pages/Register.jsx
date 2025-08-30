@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Loader2, Leaf, Zap, Shield, Users } from 'lucide-react';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { setUser, setIsAuthenticated } = useAuth();
+  const { setUser, setIsAuthenticated, setCookie, isAuthenticated, loading: authLoading } = useAuth();
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -67,7 +74,8 @@ const Register = () => {
       const data = await response.json();
       
       if (data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user));
+        // Store user data in cookie instead of localStorage
+        setCookie('user', encodeURIComponent(JSON.stringify(data.user)), 7);
         setUser(data.user);
         setIsAuthenticated(true);
         navigate('/dashboard');
