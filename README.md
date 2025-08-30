@@ -1,6 +1,7 @@
 # 🌱 HydroLink – Blockchain-Powered Green Hydrogen Credits Platform
 
-![HydroLink Banner](https://drive.google.com/uc?export=view&id=1uRJKnfRdVb8wN6KuiEylXWFc84CNtrkZ)
+![HydroLink Banner](https://drive.google.com/uc?export=view&id=1BaNVS5ZLGoWwtAh0MlHGM-RETJgnH0tc)
+
  
 *A transparent and trusted platform for minting, verifying, trading, and retiring **green hydrogen credits** — built with blockchain, AI, and gamification.*
 
