@@ -1,13 +1,18 @@
 const mongoose = require('mongoose');
 
 const NotificationSchema = new mongoose.Schema({
+<<<<<<< HEAD
   // The user who will receive this notification
   recipient: {
+=======
+  user: {
+>>>>>>> f5f6c5c01a3e82df069ea30fc3675e2180d73b2c
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
     index: true
   },
+<<<<<<< HEAD
   // The user who triggered this notification (optional)
   sender: {
     type: mongoose.Schema.Types.ObjectId,
@@ -301,3 +306,28 @@ NotificationSchema.methods.updateDeliveryStatus = function(channel, status) {
 };
 
 module.exports = mongoose.model('Notification', NotificationSchema);
+=======
+  type: {
+    type: String,
+    enum: ['request_submitted', 'request_approved', 'request_rejected', 'general'],
+    required: true
+  },
+  message: {
+    type: String,
+    required: true
+  },
+  read: {
+    type: Boolean,
+    default: false
+  },
+  meta: {
+    type: Object,
+    default: {}
+  }
+}, {
+  timestamps: true
+});
+
+const Notification = mongoose.model('Notification', NotificationSchema);
+module.exports = Notification;
+>>>>>>> f5f6c5c01a3e82df069ea30fc3675e2180d73b2c

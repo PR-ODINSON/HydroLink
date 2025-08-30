@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Leaf, Bell, User, Menu, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { Leaf, Bell, User, Menu, LogOut, Settings, ChevronDown, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import NotificationCenter from './NotificationCenter';
 
@@ -14,6 +14,23 @@ const Navbar = ({ onMenuClick }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   
   const isActive = (path) => location.pathname === path;
+
+  // Fetch notifications
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetch('/api/notifications', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setNotifications(data.data);
+      });
+  }, [isAuthenticated]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAsRead = async (id) => {
+    await fetch(`/api/notifications/${id}/read`, { method: 'PATCH', credentials: 'include' });
+    setNotifications(notifications => notifications.map(n => n._id === id ? { ...n, read: true } : n));
+  };
 
   // Scroll-based section highlighting for landing page
   useEffect(() => {
@@ -260,8 +277,6 @@ const Navbar = ({ onMenuClick }) => {
                     <span className="hidden md:block text-sm font-medium">{user?.name}</span>
                     <ChevronDown size={16} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                   </button>
-
-                  {/* Dropdown Menu */}
                   {showUserMenu && (
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
                       <div className="px-4 py-3 border-b border-gray-100">
@@ -271,7 +286,6 @@ const Navbar = ({ onMenuClick }) => {
                           {user?.role}
                         </span>
                       </div>
-                      
                       <Link
                         to="/settings"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -280,7 +294,6 @@ const Navbar = ({ onMenuClick }) => {
                         <Settings size={16} className="mr-3" />
                         Account Settings
                       </Link>
-                      
                       <button
                         onClick={handleLogout}
                         className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors"

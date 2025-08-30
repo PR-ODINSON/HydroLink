@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { 
   Factory, 
   Plus, 
@@ -20,6 +19,7 @@ const Production = () => {
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newFacility, setNewFacility] = useState({
     name: '',
     location: {
@@ -83,30 +83,49 @@ const Production = () => {
 
   const handleAddFacility = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!newFacility.name.trim() || !newFacility.location.address.trim() || !newFacility.capacity) {
+      alert('Please fill in all required fields (Name, Address, and Capacity)');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
     try {
+      const facilityData = {
+        ...newFacility,
+        capacity: parseFloat(newFacility.capacity),
+        owner: user?._id || user?.id, // Add owner ID
+        status: 'Active',
+        efficiency: 0,
+        operationalMetrics: {
+          totalEnergyProduced: 0,
+          uptime: 100
+        }
+      };
+
       const response = await fetch('/api/producer/facilities', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(newFacility),
+        body: JSON.stringify(facilityData),
       });
       
       const data = await response.json();
       if (data.success) {
         setFacilities([...facilities, data.data]);
         setShowAddModal(false);
-        setNewFacility({
-          name: '',
-          location: { address: '', city: '', state: '', country: '' },
-          energySource: 'Solar',
-          capacity: '',
-          specifications: { technology: '', manufacturer: '', model: '', yearInstalled: new Date().getFullYear() }
-        });
+        resetForm();
+      } else {
+        alert(data.message || 'Failed to add facility');
       }
     } catch (error) {
       console.error('Error adding facility:', error);
+      alert('Failed to add facility. Please try again.');
+      
       // For demo purposes, add to local state
       const mockFacility = {
         _id: Date.now().toString(),
@@ -118,14 +137,36 @@ const Production = () => {
       };
       setFacilities([...facilities, mockFacility]);
       setShowAddModal(false);
-      setNewFacility({
-        name: '',
-        location: { address: '', city: '', state: '', country: '' },
-        energySource: 'Solar',
-        capacity: '',
-        specifications: { technology: '', manufacturer: '', model: '', yearInstalled: new Date().getFullYear() }
-      });
+      resetForm();
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setNewFacility({
+      name: '',
+      location: { 
+        address: '', 
+        city: '', 
+        state: '', 
+        country: '' 
+      },
+      energySource: 'Solar',
+      capacity: '',
+      specifications: { 
+        technology: '', 
+        manufacturer: '', 
+        model: '', 
+        yearInstalled: new Date().getFullYear() 
+      }
+    });
+    setIsSubmitting(false);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    resetForm();
   };
 
   const getStatusColor = (status) => {
@@ -165,9 +206,7 @@ const Production = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="flex items-center justify-between mb-8"
       >
         <div>
@@ -185,14 +224,11 @@ const Production = () => {
           <Plus className="w-5 h-5 mr-2" />
           Add Facility
         </button>
-      </motion.div>
+      </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+        <div
           className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
         >
           <div className="flex items-center justify-between mb-4">
@@ -200,12 +236,9 @@ const Production = () => {
             <Factory className="w-5 h-5 text-blue-600" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{facilities.length}</p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+        <div
           className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
         >
           <div className="flex items-center justify-between mb-4">
@@ -215,12 +248,9 @@ const Production = () => {
           <p className="text-2xl font-bold text-gray-900">
             {facilities.reduce((sum, f) => sum + (f.capacity || 0), 0).toFixed(1)} MW
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+        <div
           className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
         >
           <div className="flex items-center justify-between mb-4">
@@ -230,12 +260,9 @@ const Production = () => {
           <p className="text-2xl font-bold text-gray-900">
             {facilities.filter(f => f.status === 'Active').length}
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+        <div
           className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
         >
           <div className="flex items-center justify-between mb-4">
@@ -248,14 +275,12 @@ const Production = () => {
               : 0
             }%
           </p>
-        </motion.div>
+        </div>
       </div>
 
       {/* Facilities Grid */}
       {facilities.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+        <div
           className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200"
         >
           <Factory className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -267,15 +292,12 @@ const Production = () => {
           >
             Add Your First Facility
           </button>
-        </motion.div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {facilities.map((facility, index) => (
-            <motion.div
+            <div
               key={facility._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
               className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow"
             >
               {/* Facility Header */}
@@ -329,7 +351,7 @@ const Production = () => {
                   Settings
                 </button>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       )}
@@ -337,9 +359,7 @@ const Production = () => {
       {/* Add Facility Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+          <div
             className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
@@ -386,6 +406,23 @@ const Production = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newFacility.location.address}
+                      onChange={(e) => setNewFacility({
+                        ...newFacility, 
+                        location: {...newFacility.location, address: e.target.value}
+                      })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="123 Main St"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       City
                     </label>
                     <input
@@ -400,7 +437,9 @@ const Production = () => {
                       placeholder="San Francisco"
                     />
                   </div>
-                  
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       State
@@ -414,6 +453,22 @@ const Production = () => {
                       })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       placeholder="California"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Country
+                    </label>
+                    <input
+                      type="text"
+                      value={newFacility.location.country}
+                      onChange={(e) => setNewFacility({
+                        ...newFacility, 
+                        location: {...newFacility.location, country: e.target.value}
+                      })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="United States"
                     />
                   </div>
                 </div>
@@ -438,21 +493,22 @@ const Production = () => {
                 <div className="flex space-x-4 pt-6">
                   <button
                     type="button"
-                    onClick={() => setShowAddModal(false)}
+                    onClick={handleCloseModal}
                     className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    disabled={isSubmitting}
+                    className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Add Facility
+                    {isSubmitting ? 'Adding...' : 'Add Facility'}
                   </button>
                 </div>
               </form>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
     </div>
