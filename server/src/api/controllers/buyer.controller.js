@@ -1,7 +1,7 @@
 const Credit = require('../models/credit.model');
 const Transaction = require('../models/transaction.model');
 const { PortfolioAnalytics } = require('../models/analytics.model');
-const blockchainService = require('../../services/blockchain.service');
+const { retireCredit, transferCredit, getTokenOwner } = require('../../services/blockchain.service');
 
 
 // @desc    Get all certified credits available for purchase/viewing
@@ -28,11 +28,27 @@ exports.retireCredit = async (req, res) => {
         }
 
         // 1. Call blockchain service to retire the token
-        const retireResult = await blockchainService.retireCredit(tokenId);
+        const retireResult = await retireCredit(tokenId);
 
         if (!retireResult.success) {
             return res.status(500).json({ success: false, message: 'Blockchain retire failed.', error: retireResult.error });
         }
+        
+        // 2. Create retirement transaction record
+        const retireTransaction = new Transaction({
+            type: 'Retirement',
+            credit: credit._id,
+            from: userId,
+            to: null, // Retirement doesn't have a "to" address
+            amount: 1, // Assuming each credit is 1 unit
+            status: 'Completed',
+            blockchain: {
+                txHash: retireResult.txHash,
+                network: 'polygon'
+            }
+        });
+        
+        await retireTransaction.save();
         
         // 2. Update the credit in our database
         credit.status = 'Retired';

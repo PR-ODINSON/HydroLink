@@ -2,36 +2,35 @@ const mongoose = require('mongoose');
 
 // Production Analytics Schema
 const ProductionAnalyticsSchema = new mongoose.Schema({
-  facility: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Facility',
-    required: true,
-    index: true
-  },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
     index: true
   },
+  period: {
+    type: String,
+    enum: ['daily', 'weekly', 'monthly', 'yearly'],
+    required: true,
+    default: 'monthly'
+  },
   date: {
     type: Date,
     required: true,
     index: true
   },
-  period: {
-    type: String,
-    enum: ['hourly', 'daily', 'weekly', 'monthly'],
-    required: true,
-    index: true
-  },
   metrics: {
-    energyProduced: {
+    totalProduction: {
       type: Number,
       default: 0,
       min: 0
     },
-    capacity: {
+    energyGenerated: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    creditsIssued: {
       type: Number,
       default: 0,
       min: 0
@@ -42,12 +41,19 @@ const ProductionAnalyticsSchema = new mongoose.Schema({
       min: 0,
       max: 100
     },
+    capacity: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
     uptime: {
       type: Number,
       default: 100,
       min: 0,
       max: 100
-    },
+    }
+  },
+  environmentalImpact: {
     co2Avoided: {
       type: Number,
       default: 0,
@@ -57,81 +63,66 @@ const ProductionAnalyticsSchema = new mongoose.Schema({
       type: Number,
       default: 0,
       min: 0
-    }
-  },
-  costs: {
-    operational: {
-      type: Number,
-      default: 0,
-      min: 0
     },
-    maintenance: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    fuel: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    total: {
+    carbonIntensity: {
       type: Number,
       default: 0,
       min: 0
     }
   },
-  weather: {
-    temperature: Number,
-    humidity: Number,
-    windSpeed: Number,
-    solarIrradiance: Number,
-    precipitation: Number
-  },
-  incidents: {
-    count: {
-      type: Number,
-      default: 0,
-      min: 0
+  facilityBreakdown: [{
+    facilityId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Facility'
     },
-    downtime: {
-      type: Number,
-      default: 0,
-      min: 0
+    production: Number,
+    efficiency: Number,
+    uptime: Number
+  }],
+  energySourceBreakdown: [{
+    source: {
+      type: String,
+      enum: ['Solar', 'Wind', 'Hydro', 'Geothermal', 'Biomass', 'Nuclear', 'Other']
     },
-    causes: [String]
-  }
+    percentage: {
+      type: Number,
+      min: 0,
+      max: 100
+    },
+    production: Number
+  }]
 }, { 
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
-// Market Analytics Schema
-const MarketAnalyticsSchema = new mongoose.Schema({
-  date: {
-    type: Date,
+// Portfolio Analytics Schema
+const PortfolioAnalyticsSchema = new mongoose.Schema({
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
     index: true
   },
   period: {
     type: String,
-    enum: ['hourly', 'daily', 'weekly', 'monthly'],
+    enum: ['daily', 'weekly', 'monthly', 'yearly'],
+    required: true,
+    default: 'monthly'
+  },
+  date: {
+    type: Date,
     required: true,
     index: true
   },
-  credits: {
-    totalIssued: {
+  portfolio: {
+    totalValue: {
       type: Number,
       default: 0,
       min: 0
     },
-    totalRetired: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    totalTraded: {
+    totalCredits: {
       type: Number,
       default: 0,
       min: 0
@@ -140,102 +131,8 @@ const MarketAnalyticsSchema = new mongoose.Schema({
       type: Number,
       default: 0,
       min: 0
-    }
-  },
-  pricing: {
-    averagePrice: {
-      type: Number,
-      default: 0,
-      min: 0
     },
-    minPrice: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    maxPrice: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    tradingVolume: {
-      type: Number,
-      default: 0,
-      min: 0
-    }
-  },
-  participants: {
-    activeProducers: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    activeBuyers: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    activeCertifiers: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    newRegistrations: {
-      type: Number,
-      default: 0,
-      min: 0
-    }
-  },
-  byEnergySource: [{
-    source: {
-      type: String,
-      enum: ['Solar', 'Wind', 'Hydro', 'Geothermal', 'Biomass', 'Nuclear', 'Other']
-    },
-    creditsIssued: {
-      type: Number,
-      default: 0
-    },
-    averagePrice: {
-      type: Number,
-      default: 0
-    },
-    tradingVolume: {
-      type: Number,
-      default: 0
-    }
-  }]
-}, { 
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
-
-// User Portfolio Analytics Schema
-const PortfolioAnalyticsSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    index: true
-  },
-  date: {
-    type: Date,
-    required: true,
-    index: true
-  },
-  period: {
-    type: String,
-    enum: ['daily', 'weekly', 'monthly'],
-    required: true,
-    index: true
-  },
-  holdings: {
-    totalCredits: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-    totalValue: {
+    retiredCredits: {
       type: Number,
       default: 0,
       min: 0
@@ -249,10 +146,6 @@ const PortfolioAnalyticsSchema = new mongoose.Schema({
       type: Number,
       default: 0,
       min: 0
-    },
-    unrealizedGainLoss: {
-      type: Number,
-      default: 0
     }
   },
   transactions: {
@@ -262,19 +155,7 @@ const PortfolioAnalyticsSchema = new mongoose.Schema({
         default: 0,
         min: 0
       },
-      totalValue: {
-        type: Number,
-        default: 0,
-        min: 0
-      }
-    },
-    sales: {
-      count: {
-        type: Number,
-        default: 0,
-        min: 0
-      },
-      totalValue: {
+      value: {
         type: Number,
         default: 0,
         min: 0
@@ -286,36 +167,35 @@ const PortfolioAnalyticsSchema = new mongoose.Schema({
         default: 0,
         min: 0
       },
-      totalCredits: {
+      credits: {
         type: Number,
         default: 0,
         min: 0
       }
     }
   },
-  sustainability: {
-    co2OffsetTotal: {
+  impact: {
+    co2Offset: {
       type: Number,
       default: 0,
       min: 0
     },
-    co2OffsetThisPeriod: {
+    treesEquivalent: {
       type: Number,
       default: 0,
       min: 0
     },
-    sustainabilityScore: {
+    carMilesOffset: {
       type: Number,
       default: 0,
-      min: 0,
-      max: 100
+      min: 0
     }
   },
-  byEnergySource: [{
+  energySourceBreakdown: [{
     source: String,
     credits: Number,
-    value: Number,
-    percentage: Number
+    percentage: Number,
+    impact: Number
   }]
 }, { 
   timestamps: true,
@@ -323,103 +203,67 @@ const PortfolioAnalyticsSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Virtual for portfolio performance
-PortfolioAnalyticsSchema.virtual('performance').get(function() {
-  if (this.holdings.totalValue > 0) {
-    return ((this.holdings.currentMarketValue - this.holdings.totalValue) / this.holdings.totalValue) * 100;
-  }
-  return 0;
-});
-
 // Static methods for ProductionAnalytics
-ProductionAnalyticsSchema.statics.getProductionTrends = async function(facilityId, startDate, endDate, period = 'daily') {
-  return this.find({
-    facility: facilityId,
-    date: { $gte: startDate, $lte: endDate },
-    period: period
-  }).sort({ date: 1 });
-};
-
-ProductionAnalyticsSchema.statics.getEfficiencyStats = async function(ownerId, period = 'monthly') {
+ProductionAnalyticsSchema.statics.getEfficiencyStats = async function(ownerId, period = 'monthly', limit = 12) {
   return this.aggregate([
-    { $match: { owner: mongoose.Types.ObjectId(ownerId), period: period } },
+    { 
+      $match: { 
+        owner: mongoose.Types.ObjectId(ownerId), 
+        period: period 
+      } 
+    },
+    { 
+      $sort: { date: -1 } 
+    },
+    { 
+      $limit: limit 
+    },
     {
       $group: {
         _id: null,
         avgEfficiency: { $avg: '$metrics.efficiency' },
         maxEfficiency: { $max: '$metrics.efficiency' },
         minEfficiency: { $min: '$metrics.efficiency' },
-        totalProduction: { $sum: '$metrics.energyProduced' },
-        avgUptime: { $avg: '$metrics.uptime' }
+        totalProduction: { $sum: '$metrics.totalProduction' }
       }
     }
   ]);
 };
 
-// Static methods for MarketAnalytics
-MarketAnalyticsSchema.statics.getPricingTrends = async function(startDate, endDate, period = 'daily') {
+ProductionAnalyticsSchema.statics.getTrendData = async function(ownerId, period = 'monthly', limit = 12) {
   return this.find({
-    date: { $gte: startDate, $lte: endDate },
+    owner: ownerId,
     period: period
-  }).sort({ date: 1 });
-};
-
-MarketAnalyticsSchema.statics.getMarketOverview = async function() {
-  const latest = await this.findOne().sort({ date: -1 });
-  return latest || {};
+  })
+  .sort({ date: -1 })
+  .limit(limit)
+  .lean();
 };
 
 // Static methods for PortfolioAnalytics
-PortfolioAnalyticsSchema.statics.getUserPortfolioHistory = async function(userId, period = 'monthly', limit = 12) {
+PortfolioAnalyticsSchema.statics.getPortfolioGrowth = async function(ownerId, period = 'monthly', limit = 12) {
   return this.find({
-    user: userId,
+    owner: ownerId,
     period: period
-  }).sort({ date: -1 }).limit(limit);
-};
-
-PortfolioAnalyticsSchema.statics.getPortfolioComparison = async function(userIds, period = 'monthly') {
-  return this.aggregate([
-    {
-      $match: {
-        user: { $in: userIds.map(id => mongoose.Types.ObjectId(id)) },
-        period: period
-      }
-    },
-    {
-      $group: {
-        _id: '$user',
-        avgHoldings: { $avg: '$holdings.totalCredits' },
-        totalValue: { $sum: '$holdings.totalValue' },
-        totalCO2Offset: { $sum: '$sustainability.co2OffsetTotal' }
-      }
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'userInfo'
-      }
-    }
-  ]);
+  })
+  .sort({ date: -1 })
+  .limit(limit)
+  .select('date portfolio.totalValue portfolio.totalCredits')
+  .lean();
 };
 
 // Indexes
-ProductionAnalyticsSchema.index({ facility: 1, date: -1 });
 ProductionAnalyticsSchema.index({ owner: 1, period: 1, date: -1 });
+ProductionAnalyticsSchema.index({ date: -1 });
 
-MarketAnalyticsSchema.index({ date: -1, period: 1 });
-MarketAnalyticsSchema.index({ period: 1, date: -1 });
+PortfolioAnalyticsSchema.index({ owner: 1, period: 1, date: -1 });
+PortfolioAnalyticsSchema.index({ date: -1 });
 
-PortfolioAnalyticsSchema.index({ user: 1, date: -1 });
-PortfolioAnalyticsSchema.index({ user: 1, period: 1, date: -1 });
-
+// Create models
 const ProductionAnalytics = mongoose.model('ProductionAnalytics', ProductionAnalyticsSchema);
-const MarketAnalytics = mongoose.model('MarketAnalytics', MarketAnalyticsSchema);
 const PortfolioAnalytics = mongoose.model('PortfolioAnalytics', PortfolioAnalyticsSchema);
 
 module.exports = {
   ProductionAnalytics,
-  MarketAnalytics,
   PortfolioAnalytics
 };

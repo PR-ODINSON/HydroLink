@@ -11,7 +11,9 @@ import {
   Eye,
   Download,
   Zap,
-  TrendingUp
+  TrendingUp,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -22,340 +24,312 @@ const Credits = () => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Mock data for demo
-    setCredits([
-      {
-        _id: '1',
-        creditId: 'HC-2025-001-ABC123',
-        productionDate: '2025-01-15',
-        energyAmountMWh: 150.5,
-        energySource: 'Solar',
-        facilityName: 'Solar Plant Alpha',
-        facilityLocation: 'San Francisco, CA',
-        status: 'Certified',
-        certificationDate: '2025-01-20',
-        createdAt: '2025-01-15',
-        environmentalImpact: { co2Avoided: 85.2 },
-        pricing: { currentMarketPrice: 45.50 }
-      },
-      {
-        _id: '2',
-        creditId: 'HC-2025-002-DEF456',
-        productionDate: '2025-01-10',
-        energyAmountMWh: 200.0,
-        energySource: 'Wind',
-        facilityName: 'Wind Farm Beta',
-        facilityLocation: 'Austin, TX',
-        status: 'Pending',
-        createdAt: '2025-01-10',
-        environmentalImpact: { co2Avoided: 113.0 },
-        pricing: { currentMarketPrice: 42.00 }
-      },
-      {
-        _id: '3',
-        creditId: 'HC-2025-003-GHI789',
-        productionDate: '2024-12-28',
-        energyAmountMWh: 125.0,
-        energySource: 'Solar',
-        facilityName: 'Solar Plant Alpha',
-        facilityLocation: 'San Francisco, CA',
-        status: 'Rejected',
-        createdAt: '2024-12-28',
-        certificationNotes: 'Insufficient documentation provided',
-        environmentalImpact: { co2Avoided: 70.8 }
+    const fetchCredits = async () => {
+      try {
+        setLoading(true);
+        let endpoint = '';
+        
+        // Determine endpoint based on user role
+        switch (user?.role?.toLowerCase()) {
+          case 'producer':
+            endpoint = '/api/producer/credits';
+            break;
+          case 'certifier':
+            endpoint = '/api/certifier/credits/pending';
+            break;
+          case 'buyer':
+            endpoint = '/api/buyer/credits/marketplace';
+            break;
+          default:
+            endpoint = '/api/buyer/credits/marketplace'; // Default to marketplace view
+        }
+
+        const response = await fetch(endpoint, {
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch credits');
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+          setCredits(data.data || []);
+        } else {
+          throw new Error(data.message || 'Failed to fetch credits');
+        }
+      } catch (err) {
+        console.error('Error fetching credits:', err);
+        setError(err.message);
+        // Keep credits as empty array on error
+        setCredits([]);
+      } finally {
+        setLoading(false);
       }
-    ]);
-    setLoading(false);
-  }, []);
+    };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'Certified':
-        return (
-          <span className="flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            Certified
-          </span>
-        );
-      case 'Pending':
-        return (
-          <span className="flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-            <Clock className="w-3 h-3 mr-1" />
-            Pending
-          </span>
-        );
-      case 'Rejected':
-        return (
-          <span className="flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-            <XCircle className="w-3 h-3 mr-1" />
-            Rejected
-          </span>
-        );
-      default:
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">{status}</span>;
+    if (user) {
+      fetchCredits();
     }
-  };
+  }, [user]);
 
-  const getSourceIcon = (source) => {
-    switch (source) {
-      case 'Solar': return '☀️';
-      case 'Wind': return '💨';
-      case 'Hydro': return '💧';
-      case 'Nuclear': return '⚛️';
-      default: return '⚡';
-    }
-  };
-
+  // Filter credits based on search term and status
   const filteredCredits = credits.filter(credit => {
-    const matchesFilter = filter === 'all' || credit.status.toLowerCase() === filter.toLowerCase();
-    const matchesSearch = credit.creditId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         credit.facilityName.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
+    const matchesSearch = credit.creditId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         credit.facilityName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         credit.energySource?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filter === 'all' || credit.status?.toLowerCase() === filter.toLowerCase();
+    
+    return matchesSearch && matchesFilter;
   });
 
-  const stats = {
-    total: credits.length,
-    certified: credits.filter(c => c.status === 'Certified').length,
-    pending: credits.filter(c => c.status === 'Pending').length,
-    totalEnergy: credits.reduce((sum, c) => sum + c.energyAmountMWh, 0),
-    totalCO2Avoided: credits.reduce((sum, c) => sum + (c.environmentalImpact?.co2Avoided || 0), 0)
+  // Get status icon and color
+  const getStatusInfo = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'certified':
+        return { icon: CheckCircle, color: 'text-green-600 bg-green-100' };
+      case 'pending':
+        return { icon: Clock, color: 'text-yellow-600 bg-yellow-100' };
+      case 'rejected':
+        return { icon: XCircle, color: 'text-red-600 bg-red-100' };
+      case 'retired':
+        return { icon: CheckCircle, color: 'text-gray-600 bg-gray-100' };
+      default:
+        return { icon: Clock, color: 'text-gray-600 bg-gray-100' };
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Handle credit request (for producers)
+  const handleRequestCredit = () => {
+    setShowRequestModal(true);
   };
 
   if (loading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-300 rounded w-1/4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-24 bg-gray-300 rounded-2xl"></div>
-            ))}
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-green-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Loading credits...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8"
-      >
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Credits</h1>
-          <p className="text-gray-600">View and manage your hydrogen credit portfolio.</p>
-        </div>
-        <button
-          onClick={() => setShowRequestModal(true)}
-          className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8"
         >
-          <Plus className="w-5 h-5 mr-2" />
-          Request Credit
-        </button>
-      </motion.div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <CreditCard className="text-green-600" />
+              {user?.role === 'Producer' ? 'My Credits' : 
+               user?.role === 'Certifier' ? 'Credits to Certify' : 
+               'Credit Marketplace'}
+            </h1>
+            <p className="text-gray-600 mt-1">
+              {user?.role === 'Producer' ? 'Manage your green hydrogen production credits' :
+               user?.role === 'Certifier' ? 'Review and certify pending credits' :
+               'Browse and purchase verified green energy credits'}
+            </p>
+          </div>
+          
+          {user?.role === 'Producer' && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={handleRequestCredit}
+              className="mt-4 sm:mt-0 bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Request Credit
+            </motion.button>
+          )}
+        </motion.div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        {/* Error State */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8"
+          >
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+              <div>
+                <h3 className="text-red-900 font-semibold">Error Loading Credits</h3>
+                <p className="text-red-700">{error}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Filters and Search */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
+          className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 mb-8"
         >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Total Credits</h3>
-            <CreditCard className="w-5 h-5 text-blue-600" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Certified</h3>
-            <CheckCircle className="w-5 h-5 text-green-600" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.certified}</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Pending</h3>
-            <Clock className="w-5 h-5 text-yellow-600" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Total Energy</h3>
-            <Zap className="w-5 h-5 text-purple-600" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.totalEnergy.toFixed(1)}</p>
-          <p className="text-xs text-gray-500">MWh</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">CO₂ Avoided</h3>
-            <TrendingUp className="w-5 h-5 text-green-600" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.totalCO2Avoided.toFixed(1)}</p>
-          <p className="text-xs text-gray-500">tons</p>
-        </motion.div>
-      </div>
-
-      {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8"
-      >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-gray-500" />
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search credits..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            
+            {/* Status Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="text-gray-500 w-5 h-5" />
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="certified">Certified</option>
                 <option value="pending">Pending</option>
                 <option value="rejected">Rejected</option>
+                <option value="retired">Retired</option>
               </select>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <Search className="w-4 h-4 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search credits..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent w-64"
-            />
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Credits List */}
-      <div className="space-y-4">
-        {filteredCredits.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200"
-          >
-            <CreditCard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Credits Found</h3>
-            <p className="text-gray-600 mb-6">
-              {credits.length === 0 
-                ? "Start by requesting your first hydrogen credit."
-                : "Try adjusting your filters or search term."
-              }
-            </p>
-          </motion.div>
-        ) : (
-          filteredCredits.map((credit, index) => (
-            <motion.div
-              key={credit._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="text-2xl">{getSourceIcon(credit.energySource)}</div>
+        {/* Credits Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCredits.length === 0 ? (
+            <div className="col-span-full">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center bg-white rounded-2xl shadow-xl border border-gray-200 p-12"
+              >
+                <CreditCard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Credits Found</h3>
+                <p className="text-gray-600 mb-6">
+                  {searchTerm || filter !== 'all' 
+                    ? 'No credits match your current filters.' 
+                    : 'You don\'t have any credits yet.'}
+                </p>
+                {user?.role === 'Producer' && !searchTerm && filter === 'all' && (
+                  <button
+                    onClick={handleRequestCredit}
+                    className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors"
+                  >
+                    Request Your First Credit
+                  </button>
+                )}
+              </motion.div>
+            </div>
+          ) : (
+            filteredCredits.map((credit, index) => {
+              const statusInfo = getStatusInfo(credit.status);
+              const StatusIcon = statusInfo.icon;
+              
+              return (
+                <motion.div
+                  key={credit._id || index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 hover:shadow-2xl transition-shadow"
+                >
+                  <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{credit.creditId}</h3>
-                      <p className="text-sm text-gray-600">{credit.facilityName}</p>
+                      <h3 className="font-semibold text-gray-900 truncate">{credit.creditId}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{credit.facilityName}</p>
                     </div>
-                    {getStatusBadge(credit.status)}
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                      <StatusIcon className="w-3 h-3" />
+                      {credit.status}
+                    </span>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs text-gray-500">Production Date</p>
-                      <p className="text-sm font-medium">{new Date(credit.productionDate).toLocaleDateString()}</p>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Energy</span>
+                      <span className="font-medium">{credit.energyAmountMWh} MWh</span>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Energy Amount</p>
-                      <p className="text-sm font-medium">{credit.energyAmountMWh} MWh</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Source</span>
+                      <span className="font-medium">{credit.energySource}</span>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Location</p>
-                      <p className="text-sm font-medium">{credit.facilityLocation}</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Production Date</span>
+                      <span className="font-medium">{formatDate(credit.productionDate)}</span>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500">CO₂ Avoided</p>
-                      <p className="text-sm font-medium">{credit.environmentalImpact?.co2Avoided?.toFixed(1) || 0} tons</p>
-                    </div>
-                  </div>
-
-                  {credit.status === 'Certified' && credit.pricing?.currentMarketPrice && (
-                    <div className="bg-green-50 rounded-lg p-3 mb-4">
+                    
+                    {credit.environmentalImpact?.co2Avoided && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-green-800">Current Market Value</span>
-                        <span className="font-semibold text-green-900">
-                          ${(credit.energyAmountMWh * credit.pricing.currentMarketPrice).toFixed(2)}
+                        <span className="text-sm text-gray-600">CO₂ Avoided</span>
+                        <span className="font-medium text-green-600">
+                          {credit.environmentalImpact.co2Avoided.toFixed(1)} tons
                         </span>
                       </div>
-                    </div>
-                  )}
-
-                  {credit.status === 'Rejected' && credit.certificationNotes && (
-                    <div className="bg-red-50 rounded-lg p-3 mb-4">
-                      <p className="text-sm text-red-800">
-                        <strong>Rejection Reason:</strong> {credit.certificationNotes}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex space-x-2 ml-4">
-                  <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  {credit.status === 'Certified' && (
-                    <button className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                      <Download className="w-4 h-4" />
+                    )}
+                    
+                    {credit.pricing?.currentMarketPrice && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Price</span>
+                        <span className="font-medium text-blue-600">
+                          ${credit.pricing.currentMarketPrice.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-6 flex gap-2">
+                    <button className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+                      <Eye className="w-4 h-4" />
+                      View
                     </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ))
-        )}
+                    
+                    {user?.role === 'Buyer' && credit.status === 'Certified' && (
+                      <button className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        Purchase
+                      </button>
+                    )}
+                    
+                    {user?.role === 'Certifier' && credit.status === 'Pending' && (
+                      <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Certify
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );

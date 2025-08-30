@@ -172,7 +172,6 @@ FacilitySchema.statics.getFacilityStats = async function() {
 FacilitySchema.index({ owner: 1 });
 FacilitySchema.index({ energySource: 1 });
 FacilitySchema.index({ status: 1 });
-FacilitySchema.index({ 'location.coordinates': '2dsphere' });
 
 const Facility = mongoose.model('Facility', FacilitySchema);
 module.exports = Facility;

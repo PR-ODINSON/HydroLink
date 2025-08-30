@@ -12,8 +12,7 @@ const CreditSchema = new mongoose.Schema({
   tokenId: {
     type: String,
     default: null,
-    sparse: true,
-    unique: true
+    sparse: true
   },
   // The user who produced the hydrogen
   producer: {
@@ -291,7 +290,7 @@ CreditSchema.index({ certifier: 1, status: 1 });
 CreditSchema.index({ status: 1 });
 CreditSchema.index({ productionDate: -1 });
 CreditSchema.index({ createdAt: -1 });
-CreditSchema.index({ tokenId: 1 }, { sparse: true, unique: true });
+CreditSchema.index({ tokenId: 1 }, { sparse: true });
 CreditSchema.index({ energySource: 1 });
 
 const Credit = mongoose.model('Credit', CreditSchema);

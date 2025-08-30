@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Achievement Definition Schema
 const AchievementSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -10,48 +11,87 @@ const AchievementSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
-    maxlength: [500, 'Description cannot exceed 500 characters']
+    trim: true
   },
   category: {
     type: String,
-    enum: ['Production', 'Efficiency', 'Sustainability', 'Volume', 'Streak', 'Innovation', 'Community'],
-    required: true,
-    index: true
-  },
-  tier: {
-    type: String,
-    enum: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'],
-    required: true,
-    index: true
-  },
-  icon: {
-    type: String,
-    default: 'trophy'
-  },
-  color: {
-    type: String,
-    default: '#FFD700'
-  },
-  requirements: {
-    type: mongoose.Schema.Types.Mixed, // Flexible structure for different achievement types
+    enum: ['Production', 'Certification', 'Trading', 'Environmental', 'Community', 'Special'],
     required: true
   },
-  rewards: {
-    points: {
-      type: Number,
-      default: 0
-    },
-    badge: String,
-    benefits: [String]
-  },
-  isActive: {
-    type: Boolean,
-    default: true
+  type: {
+    type: String,
+    enum: ['milestone', 'streak', 'cumulative', 'percentage', 'first_time', 'special'],
+    required: true
   },
   rarity: {
     type: String,
     enum: ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'],
     default: 'Common'
+  },
+  requirements: {
+    // For milestone achievements
+    threshold: {
+      type: Number,
+      min: 0
+    },
+    metric: {
+      type: String,
+      enum: ['credits_produced', 'credits_certified', 'credits_purchased', 'credits_retired', 
+             'energy_generated', 'co2_avoided', 'facilities_owned', 'consecutive_days', 
+             'transaction_volume', 'user_rating']
+    },
+    // For percentage achievements
+    percentage: {
+      type: Number,
+      min: 0,
+      max: 100
+    },
+    // For time-based achievements
+    timeframe: {
+      type: String,
+      enum: ['daily', 'weekly', 'monthly', 'yearly', 'all_time']
+    },
+    // Additional conditions
+    conditions: {
+      energy_source: [String],
+      role: {
+        type: String,
+        enum: ['Producer', 'Certifier', 'Buyer']
+      },
+      minimum_efficiency: Number,
+      consecutive_required: Boolean
+    }
+  },
+  rewards: {
+    points: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    badge: {
+      icon: String,
+      color: String,
+      design: String
+    },
+    title: String,
+    benefits: [String]
+  },
+  visibility: {
+    type: String,
+    enum: ['public', 'private', 'role_specific'],
+    default: 'public'
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  releaseDate: {
+    type: Date,
+    default: Date.now
+  },
+  expiryDate: {
+    type: Date,
+    default: null
   }
 }, { 
   timestamps: true,
@@ -70,34 +110,41 @@ const UserAchievementSchema = new mongoose.Schema({
   achievement: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Achievement',
-    required: true,
-    index: true
+    required: true
   },
-  earnedAt: {
+  unlockedAt: {
     type: Date,
     default: Date.now
   },
   progress: {
     current: {
       type: Number,
-      default: 0
+      default: 0,
+      min: 0
     },
     target: {
       type: Number,
-      required: true
+      required: true,
+      min: 1
     },
     percentage: {
       type: Number,
-      default: 0
+      default: 0,
+      min: 0,
+      max: 100
     }
   },
-  isCompleted: {
-    type: Boolean,
-    default: false
+  status: {
+    type: String,
+    enum: ['in_progress', 'completed', 'expired'],
+    default: 'in_progress'
   },
   metadata: {
+    // Store additional context about achievement
     triggerEvent: String,
-    contextData: mongoose.Schema.Types.Mixed
+    relatedEntityId: String,
+    milestone_values: [Number],
+    streak_dates: [Date]
   }
 }, { 
   timestamps: true,
@@ -105,55 +152,68 @@ const UserAchievementSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Pre-save middleware to calculate progress percentage
+// Virtual for completion status
+UserAchievementSchema.virtual('isCompleted').get(function() {
+  return this.status === 'completed';
+});
+
+// Pre-save middleware to calculate percentage
 UserAchievementSchema.pre('save', function(next) {
   if (this.progress.target > 0) {
     this.progress.percentage = Math.min(100, (this.progress.current / this.progress.target) * 100);
-    this.isCompleted = this.progress.percentage >= 100;
+    
+    // Auto-complete if target reached
+    if (this.progress.current >= this.progress.target && this.status !== 'completed') {
+      this.status = 'completed';
+      this.unlockedAt = new Date();
+    }
   }
   next();
 });
-
-// Virtual for completion status
-UserAchievementSchema.virtual('status').get(function() {
-  if (this.isCompleted) return 'Completed';
-  if (this.progress.percentage > 0) return 'In Progress';
-  return 'Not Started';
-});
-
-// Instance methods for UserAchievement
-UserAchievementSchema.methods.updateProgress = function(newProgress) {
-  this.progress.current = newProgress;
-  return this.save();
-};
-
-UserAchievementSchema.methods.markCompleted = function() {
-  this.isCompleted = true;
-  this.progress.current = this.progress.target;
-  this.progress.percentage = 100;
-  this.earnedAt = new Date();
-  return this.save();
-};
-
-// Static methods for Achievement
-AchievementSchema.statics.findByCategory = function(category) {
-  return this.find({ category, isActive: true });
-};
-
-AchievementSchema.statics.findByTier = function(tier) {
-  return this.find({ tier, isActive: true });
-};
 
 // Static methods for UserAchievement
 UserAchievementSchema.statics.findByUser = function(userId) {
   return this.find({ user: userId })
     .populate('achievement')
-    .sort({ earnedAt: -1 });
+    .sort({ unlockedAt: -1 });
 };
 
 UserAchievementSchema.statics.getUserStats = async function(userId) {
   const stats = await this.aggregate([
     { $match: { user: mongoose.Types.ObjectId(userId) } },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 },
+        totalPoints: { 
+          $sum: {
+            $cond: [
+              { $eq: ['$status', 'completed'] },
+              '$achievement.rewards.points',
+              0
+            ]
+          }
+        }
+      }
+    }
+  ]);
+
+  const levelInfo = await this.calculateUserLevel(userId);
+  
+  return {
+    achievements: stats.reduce((acc, stat) => {
+      acc[stat._id] = stat.count;
+      return acc;
+    }, {}),
+    totalPoints: stats.reduce((sum, stat) => sum + (stat.totalPoints || 0), 0),
+    level: levelInfo.level,
+    nextLevelProgress: levelInfo.progress
+  };
+};
+
+UserAchievementSchema.statics.calculateUserLevel = async function(userId) {
+  const totalPoints = await this.aggregate([
+    { $match: { user: mongoose.Types.ObjectId(userId), status: 'completed' } },
     {
       $lookup: {
         from: 'achievements',
@@ -166,58 +226,142 @@ UserAchievementSchema.statics.getUserStats = async function(userId) {
     {
       $group: {
         _id: null,
-        totalAchievements: { $sum: 1 },
-        completedAchievements: {
-          $sum: { $cond: ['$isCompleted', 1, 0] }
-        },
-        totalPoints: {
-          $sum: { $cond: ['$isCompleted', '$achievementData.rewards.points', 0] }
-        },
-        byCategory: {
-          $push: {
-            category: '$achievementData.category',
-            isCompleted: '$isCompleted',
-            points: { $cond: ['$isCompleted', '$achievementData.rewards.points', 0] }
-          }
-        }
+        total: { $sum: '$achievementData.rewards.points' }
       }
     }
   ]);
 
-  const categoryStats = {};
-  if (stats[0]?.byCategory) {
-    stats[0].byCategory.forEach(item => {
-      if (!categoryStats[item.category]) {
-        categoryStats[item.category] = { total: 0, completed: 0, points: 0 };
-      }
-      categoryStats[item.category].total++;
-      if (item.isCompleted) {
-        categoryStats[item.category].completed++;
-        categoryStats[item.category].points += item.points;
-      }
+  const points = totalPoints[0]?.total || 0;
+  
+  // Level calculation (exponential curve)
+  const level = Math.floor(Math.sqrt(points / 100)) + 1;
+  const currentLevelThreshold = Math.pow(level - 1, 2) * 100;
+  const nextLevelThreshold = Math.pow(level, 2) * 100;
+  const progress = ((points - currentLevelThreshold) / (nextLevelThreshold - currentLevelThreshold)) * 100;
+
+  return {
+    level,
+    points,
+    progress: Math.min(100, Math.max(0, progress)),
+    nextLevelThreshold
+  };
+};
+
+UserAchievementSchema.statics.checkAndUnlockAchievements = async function(userId, metrics) {
+  const user = await mongoose.model('User').findById(userId);
+  if (!user) return [];
+
+  const availableAchievements = await mongoose.model('Achievement').find({
+    isActive: true,
+    $or: [
+      { 'requirements.conditions.role': user.role },
+      { 'requirements.conditions.role': { $exists: false } }
+    ]
+  });
+
+  const unlockedAchievements = [];
+
+  for (const achievement of availableAchievements) {
+    const existingProgress = await this.findOne({
+      user: userId,
+      achievement: achievement._id
     });
+
+    // Skip if already completed
+    if (existingProgress && existingProgress.status === 'completed') {
+      continue;
+    }
+
+    const meetsRequirements = await this.evaluateRequirements(achievement, metrics, user);
+    
+    if (meetsRequirements.qualified) {
+      if (existingProgress) {
+        // Update existing progress
+        existingProgress.progress.current = meetsRequirements.currentValue;
+        existingProgress.progress.target = meetsRequirements.targetValue;
+        await existingProgress.save();
+        
+        if (existingProgress.status === 'completed') {
+          unlockedAchievements.push(existingProgress);
+        }
+      } else {
+        // Create new achievement progress
+        const newAchievement = new this({
+          user: userId,
+          achievement: achievement._id,
+          progress: {
+            current: meetsRequirements.currentValue,
+            target: meetsRequirements.targetValue
+          }
+        });
+        await newAchievement.save();
+        
+        if (newAchievement.status === 'completed') {
+          unlockedAchievements.push(newAchievement);
+        }
+      }
+    }
+  }
+
+  return unlockedAchievements;
+};
+
+UserAchievementSchema.statics.evaluateRequirements = async function(achievement, metrics, user) {
+  const req = achievement.requirements;
+  let currentValue = 0;
+  let targetValue = req.threshold || 1;
+  let qualified = false;
+
+  switch (req.metric) {
+    case 'credits_produced':
+      currentValue = metrics.creditsProduced || 0;
+      qualified = currentValue >= targetValue;
+      break;
+    case 'credits_certified':
+      currentValue = metrics.creditsCertified || 0;
+      qualified = currentValue >= targetValue;
+      break;
+    case 'credits_purchased':
+      currentValue = metrics.creditsPurchased || 0;
+      qualified = currentValue >= targetValue;
+      break;
+    case 'credits_retired':
+      currentValue = metrics.creditsRetired || 0;
+      qualified = currentValue >= targetValue;
+      break;
+    case 'energy_generated':
+      currentValue = metrics.energyGenerated || 0;
+      qualified = currentValue >= targetValue;
+      break;
+    case 'co2_avoided':
+      currentValue = metrics.co2Avoided || 0;
+      qualified = currentValue >= targetValue;
+      break;
+    default:
+      qualified = false;
   }
 
   return {
-    totalAchievements: stats[0]?.totalAchievements || 0,
-    completedAchievements: stats[0]?.completedAchievements || 0,
-    totalPoints: stats[0]?.totalPoints || 0,
-    completionRate: stats[0]?.totalAchievements > 0 
-      ? ((stats[0].completedAchievements / stats[0].totalAchievements) * 100).toFixed(1)
-      : 0,
-    byCategory: categoryStats
+    qualified,
+    currentValue,
+    targetValue
   };
 };
 
 // Indexes
-AchievementSchema.index({ category: 1, isActive: 1 });
-AchievementSchema.index({ tier: 1, isActive: 1 });
+AchievementSchema.index({ category: 1, type: 1 });
+AchievementSchema.index({ isActive: 1 });
+AchievementSchema.index({ rarity: 1 });
 
 UserAchievementSchema.index({ user: 1, achievement: 1 }, { unique: true });
-UserAchievementSchema.index({ user: 1, isCompleted: 1 });
-UserAchievementSchema.index({ user: 1, earnedAt: -1 });
+UserAchievementSchema.index({ user: 1, status: 1 });
+UserAchievementSchema.index({ achievement: 1, status: 1 });
 
+// Create models
 const Achievement = mongoose.model('Achievement', AchievementSchema);
 const UserAchievement = mongoose.model('UserAchievement', UserAchievementSchema);
 
-module.exports = { Achievement, UserAchievement };
+module.exports = {
+  Achievement,
+  UserAchievement
+};
