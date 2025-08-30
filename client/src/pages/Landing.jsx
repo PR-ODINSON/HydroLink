@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import CountUp from 'react-countup';
 import Tilt from 'react-parallax-tilt';
 
-impgit ort { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import Footer from '../components/Footer';
 import { 
   Leaf, 
