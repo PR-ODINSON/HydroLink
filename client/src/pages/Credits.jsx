@@ -15,7 +15,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import ViewCredit from '../components/viewCredit';
+import ViewCredit from '../components/ViewCredit';
 
 const Credits = () => {
   const { user } = useAuth();
