@@ -14,7 +14,8 @@ const {
     markNotificationRead,
     markAllNotificationsRead,
     getProducerFacilities,
-    createProducerFacility
+    createProducerFacility,
+    getWalletData
 } = require('../controllers/producer.controller');
 
 const router = express.Router();
@@ -52,5 +53,6 @@ router.patch('/notifications/read-all', markAllNotificationsRead);
 
 // Wallet routes
 router.put('/wallet', updateWalletAddress);
+router.get('/wallet', getWalletData);
 
 module.exports = router;

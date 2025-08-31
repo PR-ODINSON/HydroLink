@@ -503,3 +503,21 @@ exports.createProducerFacility = async (req, res) => {
   }
 };
 
+// @desc    Get wallet data for producer
+// @route   GET /api/producer/wallet
+exports.getWalletData = async (req, res) => {
+  try {
+    const walletData = require('../../../walletData.json');
+    const producerWallet = walletData.find(wallet => wallet.role === 'Producer');
+
+    if (!producerWallet) {
+      return res.status(404).json({ success: false, message: 'Producer wallet not found' });
+    }
+
+    res.status(200).json({ success: true, data: producerWallet });
+  } catch (error) {
+    console.error('Error fetching producer wallet data:', error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+

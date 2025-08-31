@@ -487,3 +487,21 @@ exports.markAllNotificationsRead = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };
+
+// @desc    Get wallet data for buyer
+// @route   GET /api/buyer/wallet
+exports.getWalletData = async (req, res) => {
+  try {
+    const walletData = require('../../../walletData.json');
+    const buyerWallet = walletData.find(wallet => wallet.role === 'Buyer');
+
+    if (!buyerWallet) {
+      return res.status(404).json({ success: false, message: 'Buyer wallet not found' });
+    }
+
+    res.status(200).json({ success: true, data: buyerWallet });
+  } catch (error) {
+    console.error('Error fetching buyer wallet data:', error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
