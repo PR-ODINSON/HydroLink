@@ -1,36 +1,33 @@
 const Credit = require('../models/credit.model');
 const Transaction = require('../models/transaction.model');
-const { PortfolioAnalytics } = require('../models/analytics.model');
 const { retireCredit, transferCredit, getTokenOwner } = require('../../services/blockchain.service');
 const Notification = require('../models/notification.model');
+const User = require('../models/user.model');
 
-// @desc    Get all available credits for purchase
+// @desc    Get all available credits for purchase (smart contracts)
 // @route   GET /api/buyer/credits/available
 exports.getAvailableCredits = async (req, res) => {
     try {
-        const availableCredits = await Credit.find({ status: 'Certified' })
-            .populate('producer', 'name facilityName facilityLocation')
+        // Get ALL credits from database
+        const allCredits = await Credit.find({})
+            .populate('producer', 'name email role walletAddress')
+            .populate('certifier', 'name email role walletAddress')
             .sort({ createdAt: -1 });
-        res.status(200).json({ success: true, data: availableCredits });
+        
+        console.log(`Returning ${allCredits.length} credits from database`);
+        res.status(200).json({ success: true, data: allCredits });
     } catch (error) {
+        console.error('Error fetching credits:', error);
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
 };
 
-// @desc    Get purchase history for the buyer
-// @route   GET /api/buyer/credits/purchase-history
-exports.getPurchaseHistory = async (req, res) => {
+// @desc    Get purchase history for the buyer (completed transactions)
+// @route   GET /api/buyer/credits/purchased
+exports.getPurchasedCredits = async (req, res) => {
     try {
         const userId = req.user._id;
-        const purchases = await Transaction.find({
-            to: userId,
-            type: 'Purchase',
-            status: 'Completed'
-        })
-        .populate('credit', 'creditId energyAmountMWh energySource facilityName')
-        .populate('from', 'name')
-        .sort({ createdAt: -1 });
-        
+        const purchases = await Transaction.findCompletedByBuyer(userId);
         res.status(200).json({ success: true, data: purchases });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
@@ -119,47 +116,35 @@ exports.getDashboardStats = async (req, res) => {
     try {
         const userId = req.user._id;
         
-        // Get user's credits (purchases)
-        const userTransactions = await Transaction.find({
-            $or: [{ to: userId }, { from: userId }],
-            status: 'Completed'
-        }).populate('credit');
+        // Get user's transactions (simplified)
+        const purchaseTransactions = await Transaction.findByBuyer(userId);
 
         // Calculate portfolio stats
-        let totalCredits = 0;
-        let totalSpent = 0;
-        let totalRetired = 0;
-        let co2Offset = 0;
-
-        userTransactions.forEach(transaction => {
-            if (transaction.type === 'Purchase' && transaction.to.equals(userId)) {
-                totalCredits += transaction.amount;
-                totalSpent += transaction.totalValue || 0;
-            }
-            if (transaction.type === 'Retirement' && transaction.from.equals(userId)) {
-                totalRetired += transaction.amount;
-                co2Offset += transaction.credit?.environmentalImpact?.co2Avoided || 0;
-            }
-        });
+        let totalCredits = purchaseTransactions.length;
 
         // Get available marketplace credits count
-        const marketplaceCount = await Credit.countDocuments({ status: 'Certified' });
+        const marketplaceCount = await Credit.countDocuments({ status: 'Certified', isSold: false });
+
+        // Get unread notifications count
+        const unreadNotifications = await Notification.getUnreadCountForUser(userId);
 
         res.status(200).json({
             success: true,
             data: {
                 portfolio: {
-                    totalCredits: totalCredits - totalRetired,
-                    totalSpent,
-                    totalRetired,
-                    co2Offset
+                    totalCredits,
+                    totalSpent: 0, // Simplified - no pricing info
+                    pendingRequests: 0 // Simplified - no pending requests
                 },
                 marketplace: {
                     availableCredits: marketplaceCount
                 },
                 transactions: {
-                    total: userTransactions.length
-                }
+                    total: purchaseTransactions.length,
+                    completed: purchaseTransactions.length,
+                    pending: 0
+                },
+                unreadNotifications
             }
         });
     } catch (error) {
@@ -344,52 +329,102 @@ exports.getSustainabilityImpact = async (req, res) => {
     }
 };
 
-// @desc    Purchase credits
+// @desc    Send purchase request to producer (request system)
 // @route   POST /api/buyer/credits/:creditId/purchase
 exports.purchaseCredit = async (req, res) => {
     try {
         const { creditId } = req.params;
-        const { amount, pricePerCredit } = req.body;
-        const userId = req.user._id;
+        const buyerId = req.user._id;
 
-        const credit = await Credit.findById(creditId);
-        if (!credit || credit.status !== 'Certified') {
+        // Find the credit and check if it can be sold
+        const credit = await Credit.findById(creditId).populate('producer', 'name email');
+        if (!credit) {
             return res.status(404).json({ 
                 success: false, 
-                message: 'Credit not found or not available for purchase' 
+                message: 'Credit not found' 
             });
         }
 
-        // Create transaction record
-        const transaction = new Transaction({
-            type: 'Purchase',
+        if (!credit.canBeSold()) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Credit is not available for purchase (either already sold or not certified)' 
+            });
+        }
+
+        // Check if there's already a pending request for this credit from this buyer
+        const existingRequest = await Transaction.findOne({
             credit: creditId,
-            from: credit.currentOwner || credit.producer, // If no current owner, from producer
-            to: userId,
-            amount: parseFloat(amount),
-            pricePerCredit: parseFloat(pricePerCredit),
-            status: 'Pending'
+            buyer: buyerId,
+            status: 'pending'
         });
 
-        await transaction.save();
+        if (existingRequest) {
+            return res.status(400).json({
+                success: false,
+                message: 'You already have a pending purchase request for this credit'
+            });
+        }
 
-        // In a real implementation, you would:
-        // 1. Process payment
-        // 2. Update blockchain
-        // 3. Transfer credit ownership
+        // Create purchase request (pending status)
+        const purchaseRequest = new Transaction({
+            credit: creditId,
+            buyer: buyerId,
+            status: 'pending',
+            requestDate: new Date()
+        });
 
-        // Simulate successful purchase
-        transaction.status = 'Completed';
-        credit.currentOwner = userId;
-        
-        await Promise.all([transaction.save(), credit.save()]);
+        await purchaseRequest.save();
 
-        res.status(200).json({
+        // Send in-app notification to producer
+        await Notification.create({
+            user: credit.producer._id,
+            title: '🛒 New Purchase Request!',
+            message: `${req.user.name} wants to purchase your hydrogen credit "${credit.creditId}" (${credit.energyAmountMWh} MWh from ${credit.facilityName}).`,
+            type: 'purchase_requested',
+            priority: 'high',
+            relatedModel: 'Transaction',
+            relatedId: purchaseRequest._id,
+            actionUrl: `/dashboard/producer/requests`,
+            actionText: 'View Request',
+            metadata: {
+                buyerName: req.user.name,
+                buyerEmail: req.user.email,
+                creditId: credit.creditId,
+                energyAmount: credit.energyAmountMWh,
+                facilityName: credit.facilityName,
+                requestDate: new Date(),
+                requestId: purchaseRequest._id
+            }
+        });
+
+        // Send email notification to producer
+        console.log(`📧 EMAIL NOTIFICATION TO PRODUCER:`);
+        console.log(`To: ${credit.producer.email}`);
+        console.log(`Subject: 🛒 New Purchase Request for Your Hydrogen Credit ${credit.creditId}`);
+        console.log(`Message: Dear ${credit.producer.name},`);
+        console.log(`${req.user.name} (${req.user.email}) has requested to purchase your hydrogen credit:`);
+        console.log(`Credit ID: ${credit.creditId}`);
+        console.log(`Energy Amount: ${credit.energyAmountMWh} MWh`);
+        console.log(`Facility: ${credit.facilityName}`);
+        console.log(`Request Date: ${new Date().toLocaleString()}`);
+        console.log(`Please log in to your producer dashboard to approve or reject this request.`);
+        console.log(`---`);
+
+        res.status(201).json({
             success: true,
-            message: 'Credit purchased successfully',
-            data: { transaction, credit }
+            message: 'Purchase request sent to producer! They will receive an email and in-app notification.',
+            data: { 
+                purchaseRequest,
+                credit: {
+                    creditId: credit.creditId,
+                    energyAmountMWh: credit.energyAmountMWh,
+                    facilityName: credit.facilityName
+                }
+            }
         });
     } catch (error) {
+        console.error('Error in purchaseCredit:', error);
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
 };

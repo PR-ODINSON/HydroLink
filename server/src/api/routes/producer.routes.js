@@ -6,6 +6,10 @@ const {
     getProducerCredits,
     getDashboardStats,
     updateWalletAddress,
+    getPendingSaleRequests,
+    acceptSaleRequest,
+    rejectSaleRequest,
+    getSaleHistory,
     getNotifications,
     markNotificationRead,
     markAllNotificationsRead
@@ -27,6 +31,12 @@ router.route('/credits')
 
 // Dashboard routes
 router.get('/dashboard', getDashboardStats);
+
+// Sales routes
+router.get('/sales/pending', getPendingSaleRequests);
+router.post('/sales/:transactionId/accept', acceptSaleRequest);
+router.post('/sales/:transactionId/reject', rejectSaleRequest);
+router.get('/sales/history', getSaleHistory);
 
 // Notification routes
 router.get('/notifications', getNotifications);

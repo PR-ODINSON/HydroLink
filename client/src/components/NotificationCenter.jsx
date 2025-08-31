@@ -141,6 +141,8 @@ const NotificationCenter = ({ isOpen, onClose }) => {
         return <Bell className="w-5 h-5 text-yellow-500" />;
       case 'credit_minted':
         return <CheckCircle className="w-5 h-5 text-blue-500" />;
+      case 'purchase_requested':
+        return <Mail className="w-5 h-5 text-orange-500" />;
       default:
         return <Info className="w-5 h-5 text-gray-500" />;
     }

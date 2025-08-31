@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';``
 import { motion } from 'framer-motion';
 import { 
   ShoppingCart, 
@@ -13,147 +13,173 @@ import {
   ArrowRight,
   CheckCircle,
   Filter,
-  Search
+  Search,
+  AlertCircle,
+  Loader2,
+  Factory
 } from 'lucide-react';
 import DashboardCard from '../components/DashboardCard';
 import Chart from '../components/Chart';
+import { useAuth } from '../contexts/AuthContext';
 
 const Buyer = () => {
+  const { user } = useAuth();
+  const [availableCredits, setAvailableCredits] = useState([]);
+  const [purchasedCredits, setPurchasedCredits] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
   const [selectedCredits, setSelectedCredits] = useState([]);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedCredit, setSelectedCredit] = useState(null);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Sample data for available credits
-  const availableCredits = [
-    {
-      id: 'HC-2024-009',
-      producer: 'GreenTech Industries',
-      amount: 1250,
-      price: 45.50,
-      pricePerMWh: 45.50,
-      productionDate: '2024-02-01',
-      facility: 'Solar H2 Plant Delta',
-      location: 'Nevada, USA',
-      source: 'Solar',
-      certification: 'Gold Standard',
-      co2Reduction: 2.8,
-      available: true
-    },
-    {
-      id: 'HC-2024-010',
-      producer: 'WindPower Corp',
-      amount: 800,
-      price: 42.00,
-      pricePerMWh: 42.00,
-      productionDate: '2024-02-03',
-      facility: 'Wind H2 Plant Alpha',
-      location: 'Kansas, USA',
-      source: 'Wind',
-      certification: 'Verified',
-      co2Reduction: 1.9,
-      available: true
-    },
-    {
-      id: 'HC-2024-011',
-      producer: 'HydroGen Solutions',
-      amount: 2100,
-      price: 48.75,
-      pricePerMWh: 48.75,
-      productionDate: '2024-02-05',
-      facility: 'Hydro H2 Plant Beta',
-      location: 'Oregon, USA',
-      source: 'Hydro',
-      certification: 'Premium',
-      co2Reduction: 4.2,
-      available: true
-    },
-    {
-      id: 'HC-2024-012',
-      producer: 'SolarMax Energy',
-      amount: 950,
-      price: 44.25,
-      pricePerMWh: 44.25,
-      productionDate: '2024-02-07',
-      facility: 'Solar H2 Plant Gamma',
-      location: 'Arizona, USA',
-      source: 'Solar',
-      certification: 'Gold Standard',
-      co2Reduction: 2.3,
-      available: true
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch available credits
+        const creditsResponse = await fetch('/api/buyer/credits/available', {
+          credentials: 'include'
+        });
+        if (creditsResponse.ok) {
+          const creditsData = await creditsResponse.json();
+          setAvailableCredits(creditsData.data || []);
+        }
+
+        // Fetch purchased credits
+        const purchasedResponse = await fetch('/api/buyer/credits/purchased', {
+          credentials: 'include'
+        });
+        if (purchasedResponse.ok) {
+          const purchasedData = await purchasedResponse.json();
+          setPurchasedCredits(purchasedData.data || []);
+        }
+
+        // Fetch dashboard stats
+        const dashboardResponse = await fetch('/api/buyer/dashboard', {
+          credentials: 'include'
+        });
+        if (dashboardResponse.ok) {
+          const dashboardData = await dashboardResponse.json();
+          setDashboardStats(dashboardData.data);
+        }
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchData();
     }
-  ];
+  }, [user]);
 
-  // Sample data for carbon offset history
+  // Mock data for charts and statistics
   const carbonOffsetData = [
-    { name: 'Jan', value: 15.2 },
-    { name: 'Feb', value: 23.8 },
-    { name: 'Mar', value: 31.5 },
-    { name: 'Apr', value: 28.7 },
-    { name: 'May', value: 42.1 },
-    { name: 'Jun', value: 38.9 },
-    { name: 'Jul', value: 55.3 }
+    { name: 'Jan', value: 12.5 },
+    { name: 'Feb', value: 18.2 },
+    { name: 'Mar', value: 22.8 },
+    { name: 'Apr', value: 35.4 },
+    { name: 'May', value: 48.7 },
+    { name: 'Jun', value: 84.2 }
   ];
 
   const retiredCredits = [
     {
-      id: 'HC-2024-001',
-      amount: 500,
-      retiredDate: '2024-01-15',
-      co2Reduction: 1.2,
-      purpose: 'Corporate Sustainability Goal'
+      id: 'HC-202412-ABC123',
+      amount: 150,
+      co2Reduction: 12.5,
+      retiredDate: '2024-12-01',
+      purpose: 'Q4 Sustainability Goals'
     },
     {
-      id: 'HC-2024-003',
-      amount: 750,
-      retiredDate: '2024-01-28',
-      co2Reduction: 1.8,
-      purpose: 'Carbon Neutral Initiative'
+      id: 'HC-202411-DEF456',
+      amount: 200,
+      co2Reduction: 18.3,
+      retiredDate: '2024-11-15',
+      purpose: 'Annual Carbon Neutrality'
+    },
+    {
+      id: 'HC-202410-GHI789',
+      amount: 100,
+      co2Reduction: 8.7,
+      retiredDate: '2024-10-30',
+      purpose: 'Supply Chain Offset'
     }
   ];
 
   const filteredCredits = availableCredits.filter(credit => {
-    const matchesFilter = filter === 'all' || credit.source.toLowerCase() === filter.toLowerCase();
-    const matchesSearch = credit.producer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         credit.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === 'all' || credit.energySource?.toLowerCase() === filter.toLowerCase();
+    const matchesSearch = credit.producer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         credit.creditId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         credit.facilityName?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
-  const toggleCreditSelection = (creditId) => {
-    setSelectedCredits(prev => 
-      prev.includes(creditId) 
-        ? prev.filter(id => id !== creditId)
-        : [...prev, creditId]
+  const handlePurchaseCredit = (credit) => {
+    setSelectedCredit(credit);
+    setShowPurchaseModal(true);
+  };
+
+  const handleConfirmPurchase = async () => {
+    if (!selectedCredit) {
+      setError('No credit selected');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/buyer/credits/${selectedCredit._id}/purchase`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        setShowPurchaseModal(false);
+        setSelectedCredit(null);
+        const successMessage = `
+🎉 Purchase request sent successfully!
+
+✅ The producer will receive:
+• Email notification  
+• In-app notification
+• Details about your request
+
+📱 You will be notified when they respond.
+`;
+        alert(successMessage);
+        // Refresh the data to show any updates
+        window.location.reload(); 
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to send purchase request');
+      }
+    } catch (error) {
+      console.error('Error purchasing credit:', error);
+      setError('Failed to purchase credit');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Loading marketplace...</p>
+        </div>
+      </div>
     );
-  };
-
-  const getTotalSelectedValue = () => {
-    return selectedCredits.reduce((total, creditId) => {
-      const credit = availableCredits.find(c => c.id === creditId);
-      return total + (credit ? credit.amount * credit.pricePerMWh : 0);
-    }, 0);
-  };
-
-  const getTotalSelectedAmount = () => {
-    return selectedCredits.reduce((total, creditId) => {
-      const credit = availableCredits.find(c => c.id === creditId);
-      return total + (credit ? credit.amount : 0);
-    }, 0);
-  };
-
-  const handlePurchase = () => {
-    console.log('Purchasing credits:', selectedCredits);
-    setShowPurchaseModal(false);
-    setSelectedCredits([]);
-  };
-
-  const handleRetire = (creditId) => {
-    console.log('Retiring credit:', creditId);
-  };
-
-  const totalRetiredCredits = retiredCredits.reduce((sum, credit) => sum + credit.amount, 0);
-  const totalCO2Reduction = retiredCredits.reduce((sum, credit) => sum + credit.co2Reduction, 0);
-  const avgPrice = availableCredits.reduce((sum, credit) => sum + credit.pricePerMWh, 0) / availableCredits.length;
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -171,17 +197,13 @@ const Buyer = () => {
             Purchase and retire green hydrogen credits for your sustainability goals.
           </p>
         </div>
-        {selectedCredits.length > 0 && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={() => setShowPurchaseModal(true)}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 flex items-center group shadow-lg"
-          >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            Purchase ({selectedCredits.length})
-            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </motion.button>
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+              <span className="text-red-800">{error}</span>
+            </div>
+          </div>
         )}
       </div>
 
@@ -194,7 +216,7 @@ const Buyer = () => {
         >
           <DashboardCard
             title="Available Credits"
-            value={availableCredits.length.toString()}
+            value={dashboardStats?.marketplace?.availableCredits?.toString() || '0'}
             icon={ShoppingCart}
             color="blue"
             subtitle="Ready for purchase"
@@ -207,13 +229,11 @@ const Buyer = () => {
           transition={{ delay: 0.2 }}
         >
           <DashboardCard
-            title="Credits Retired"
-            value={totalRetiredCredits.toLocaleString()}
+            title="Credits Purchased"
+            value={dashboardStats?.portfolio?.totalCredits?.toString() || '0'}
             icon={Award}
-            trend="up"
-            trendValue="+25.3%"
             color="green"
-            subtitle="MWh retired"
+            subtitle="Credits owned"
           />
         </motion.div>
         
@@ -223,13 +243,11 @@ const Buyer = () => {
           transition={{ delay: 0.3 }}
         >
           <DashboardCard
-            title="CO₂ Reduced"
-            value={`${totalCO2Reduction.toFixed(1)}t`}
-            icon={Leaf}
-            trend="up"
-            trendValue="+18.7%"
-            color="green"
-            subtitle="Total carbon offset"
+            title="Total Spent"
+            value={`$${dashboardStats?.portfolio?.totalSpent?.toLocaleString() || '0'}`}
+            icon={DollarSign}
+            color="orange"
+            subtitle="Investment in credits"
           />
         </motion.div>
         
@@ -239,13 +257,11 @@ const Buyer = () => {
           transition={{ delay: 0.4 }}
         >
           <DashboardCard
-            title="Avg Price"
-            value={`$${avgPrice.toFixed(2)}`}
-            icon={DollarSign}
-            trend="down"
-            trendValue="-3.2%"
-            color="orange"
-            subtitle="Per MWh"
+            title="Pending Requests"
+            value={dashboardStats?.portfolio?.pendingRequests?.toString() || '0'}
+            icon={TrendingDown}
+            color="yellow"
+            subtitle="Awaiting approval"
           />
         </motion.div>
       </div>
@@ -332,84 +348,163 @@ const Buyer = () => {
           </div>
         </div>
         
-        <div className="divide-y divide-gray-200">
-          {filteredCredits.map((credit, index) => (
-            <motion.div
-              key={credit.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 * index }}
-              className={`p-6 hover:bg-gray-50 transition-colors ${
-                selectedCredits.includes(credit.id) ? 'bg-blue-50 border-l-4 border-blue-400' : ''
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedCredits.includes(credit.id)}
-                    onChange={() => toggleCreditSelection(credit.id)}
-                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <span className="font-medium text-gray-900">{credit.id}</span>
-                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                        {credit.certification}
-                      </span>
-                      <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                        {credit.source}
-                      </span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
+          {filteredCredits.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Smart Contracts Available</h3>
+              <p className="text-gray-500">No certified hydrogen credits are currently available for purchase.</p>
+            </div>
+          ) : (
+            filteredCredits.map((credit, index) => (
+              <motion.div
+                key={credit._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index }}
+                className={`bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden relative ${
+                  credit.isSold ? 'opacity-75' : ''
+                }`}
+              >
+                {/* Sold Overlay */}
+                {credit.isSold && (
+                  <div className="absolute inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-10 rounded-xl">
+                    <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12">
+                      SOLD OUT
                     </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
-                      <div className="flex items-center">
-                        <User className="w-4 h-4 mr-2" />
-                        {credit.producer}
-                      </div>
-                      <div className="flex items-center">
-                        <Zap className="w-4 h-4 mr-2" />
-                        {credit.amount.toLocaleString()} MWh
-                      </div>
-                      <div className="flex items-center">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        {credit.location}
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-2" />
-                        {new Date(credit.productionDate).toLocaleDateString()}
-                      </div>
+                  </div>
+                )}
+                {/* Smart Contract Header */}
+                <div className="bg-gradient-to-r from-green-500 to-blue-600 px-6 py-4">
+                  <div className="flex items-center justify-between text-white">
+                    <div>
+                      <h3 className="font-bold text-lg">{credit.creditId}</h3>
+                      <p className="text-green-100 text-sm">Smart Contract #{credit.tokenId || 'Pending'}</p>
                     </div>
-                    
+                    <div className="text-right">
+                      <div className="text-2xl font-bold">{credit.energyAmountMWh}</div>
+                      <div className="text-green-100 text-sm">MWh</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Producer Information */}
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{credit.producer?.name || 'Unknown Producer'}</p>
+                      <p className="text-sm text-gray-600">Producer</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Credit Details */}
+                <div className="px-6 py-4 space-y-3">
+                  {/* Status and Energy Source */}
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      {credit.status}
+                    </span>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                      {credit.energySource}
+                    </span>
+                  </div>
+
+                  {/* Facility Information */}
+                  <div className="space-y-2">
                     <div className="flex items-center text-sm text-gray-600">
-                      <Leaf className="w-4 h-4 mr-1 text-green-500" />
-                      <span>Reduces {credit.co2Reduction}t CO₂</span>
+                      <Factory className="w-4 h-4 mr-2 text-gray-400" />
+                      <span className="font-medium">Facility:</span>
+                      <span className="ml-1">{credit.facilityName}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                      <span>{credit.facilityLocation}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                      <span>Produced: {new Date(credit.productionDate).toLocaleDateString()}</span>
                     </div>
                   </div>
-                </div>
-                
-                <div className="text-right">
-                  <div className="text-lg font-semibold text-gray-900">
-                    ${(credit.amount * credit.pricePerMWh).toLocaleString()}
+
+                  {/* Environmental Impact */}
+                  {credit.environmentalImpact?.co2Avoided && (
+                    <div className="bg-green-50 rounded-lg p-3">
+                      <div className="flex items-center text-sm text-green-700">
+                        <Leaf className="w-4 h-4 mr-2" />
+                        <span className="font-medium">Environmental Impact:</span>
+                      </div>
+                      <div className="text-sm text-green-600 mt-1">
+                        Reduces {credit.environmentalImpact.co2Avoided}t CO₂ emissions
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Certification Info */}
+                  <div className="bg-blue-50 rounded-lg p-3">
+                    <div className="flex items-center text-sm text-blue-700">
+                      <Award className="w-4 h-4 mr-2" />
+                      <span className="font-medium">Certified by:</span>
+                      <span className="ml-1">{credit.certifier?.name || 'Verification Authority'}</span>
+                    </div>
+                    {credit.certificationDate && (
+                      <div className="text-sm text-blue-600 mt-1">
+                        Certified on {new Date(credit.certificationDate).toLocaleDateString()}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-sm text-gray-500">
-                    ${credit.pricePerMWh}/MWh
-                  </div>
-                  <button
-                    onClick={() => handleRetire(credit.id)}
-                    className="mt-2 text-sm text-green-600 hover:text-green-700 font-medium"
-                  >
-                    Quick Retire
-                  </button>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+
+                {/* Purchase Section */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Smart Contract Status:</span>
+                      <span className={`ml-1 ${credit.isSold ? 'text-red-600' : 'text-green-600'}`}>
+                        {credit.isSold ? 'Already Sold' : 'Available for Purchase'}
+                      </span>
+                    </div>
+                    {credit.tokenId && (
+                      <div className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                        Token: {credit.tokenId}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {credit.status === 'Certified' && !credit.isSold ? (
+                    <button
+                      onClick={() => handlePurchaseCredit(credit)}
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-4 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center justify-center group font-medium shadow-sm"
+                    >
+                      <ShoppingCart className="w-5 h-5 mr-2" />
+                      Register to Purchase
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  ) : (
+                    <div 
+                      className={`w-full py-3 px-4 rounded-lg flex items-center justify-center font-medium ${
+                        credit.isSold 
+                          ? 'bg-red-100 text-red-700 cursor-not-allowed' 
+                          : 'bg-gray-300 text-gray-600'
+                      }`}
+                      style={credit.isSold ? { cursor: 'not-allowed' } : {}}
+                    >
+                      {credit.isSold ? '❌ Already Sold' : `📋 ${credit.status}`}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
       </motion.div>
 
-      {/* Purchase Modal */}
-      {showPurchaseModal && (
+      {/* Purchase Confirmation Modal */}
+      {showPurchaseModal && selectedCredit && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -421,7 +516,7 @@ const Buyer = () => {
             className="bg-white rounded-2xl p-6 w-full max-w-lg"
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Purchase Summary</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Register to Purchase</h3>
               <button
                 onClick={() => setShowPurchaseModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -431,31 +526,27 @@ const Buyer = () => {
             </div>
             
             <div className="space-y-4 mb-6">
+              {/* Credit Info */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Selected Credits:</span>
-                  <span className="font-medium">{selectedCredits.length}</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Total Amount:</span>
-                  <span className="font-medium">{getTotalSelectedAmount().toLocaleString()} MWh</span>
-                </div>
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total Price:</span>
-                  <span>${getTotalSelectedValue().toLocaleString()}</span>
+                <h4 className="font-medium text-gray-900 mb-2">{selectedCredit.creditId}</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                  <div>Producer: {selectedCredit.producer?.name}</div>
+                  <div>Energy: {selectedCredit.energyAmountMWh} MWh</div>
+                  <div>Source: {selectedCredit.energySource}</div>
+                  <div>Facility: {selectedCredit.facilityName}</div>
                 </div>
               </div>
               
-              <div className="space-y-2">
-                {selectedCredits.map(creditId => {
-                  const credit = availableCredits.find(c => c.id === creditId);
-                  return credit ? (
-                    <div key={creditId} className="flex justify-between text-sm">
-                      <span>{credit.id} ({credit.amount} MWh)</span>
-                      <span>${(credit.amount * credit.pricePerMWh).toLocaleString()}</span>
-                    </div>
-                  ) : null;
-                })}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                  <span className="text-green-800 font-medium">
+                    Register to purchase this credit?
+                  </span>
+                </div>
+                <p className="text-green-700 text-sm mt-1">
+                  This will send a purchase request to the producer. They will receive an email and notification to approve or reject your request.
+                </p>
               </div>
             </div>
             
@@ -467,10 +558,10 @@ const Buyer = () => {
                 Cancel
               </button>
               <button
-                onClick={handlePurchase}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all"
+                onClick={handleConfirmPurchase}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all"
               >
-                Confirm Purchase
+                Send Request
               </button>
             </div>
           </motion.div>

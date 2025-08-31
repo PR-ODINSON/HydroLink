@@ -1,5 +1,6 @@
 const Credit = require('../models/credit.model');
 const Request = require('../models/request.model');
+const Transaction = require('../models/transaction.model');
 const User = require('../models/user.model');
 const Notification = require('../models/notification.model');
 
@@ -153,7 +154,169 @@ exports.getDashboardStats = async (req, res) => {
 exports.getNotifications = async (req, res) => {
   try {
     const notifications = await Notification.findForUser(req.user._id);
+    console.log(`Found ${notifications.length} notifications for producer ${req.user._id}`);
     res.status(200).json({ success: true, data: notifications });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Get pending sale requests for producer
+// @route   GET /api/producer/sales/pending
+exports.getPendingSaleRequests = async (req, res) => {
+  try {
+    // Find producer's credits
+    const producerCredits = await Credit.find({ producer: req.user._id }, '_id');
+    const creditIds = producerCredits.map(c => c._id);
+    
+    // Find pending requests for producer's credits
+    const pendingRequests = await Transaction.find({ 
+      credit: { $in: creditIds },
+      status: 'pending'
+    })
+    .populate('credit', 'creditId energyAmountMWh facilityName energySource')
+    .populate('buyer', 'name email')
+    .sort({ createdAt: -1 });
+    
+    res.status(200).json({ success: true, data: pendingRequests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Accept sale request
+// @route   POST /api/producer/sales/:transactionId/accept
+exports.acceptSaleRequest = async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.transactionId)
+      .populate('credit')
+      .populate('buyer', 'name email');
+    
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+    
+    // Verify this is the producer's credit
+    if (!transaction.credit.producer.equals(req.user._id)) {
+      return res.status(403).json({ success: false, message: 'Not authorized to accept this request' });
+    }
+    
+    // Check if credit can still be sold
+    if (!transaction.credit.canBeSold()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Credit is no longer available for sale' 
+      });
+    }
+    
+    // Update transaction status
+    transaction.status = 'approved';
+    transaction.responseDate = new Date();
+    await transaction.save();
+    
+    // Mark credit as sold
+    await transaction.credit.sellTobuyer(transaction.buyer._id);
+    
+    // Create notification for buyer
+    await Notification.create({
+      user: transaction.buyer._id,
+      title: '✅ Purchase Request Accepted!',
+      message: `Your purchase request for hydrogen credit "${transaction.credit.creditId}" has been accepted by ${req.user.name}. The credit has been transferred to your account.`,
+      type: 'purchase_requested',
+      priority: 'high',
+      relatedModel: 'Transaction',
+      relatedId: transaction._id,
+      actionUrl: `/dashboard/buyer/portfolio`,
+      actionText: 'View Portfolio',
+      metadata: {
+        producerName: req.user.name,
+        creditId: transaction.credit.creditId,
+        energyAmount: transaction.credit.energyAmountMWh,
+        facilityName: transaction.credit.facilityName,
+        acceptedAt: new Date()
+      }
+    });
+    
+    res.status(200).json({ 
+      success: true, 
+      message: 'Sale request accepted successfully. Credit has been transferred to the buyer.',
+      data: transaction 
+    });
+  } catch (error) {
+    console.error('Error accepting sale request:', error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Reject sale request
+// @route   POST /api/producer/sales/:transactionId/reject
+exports.rejectSaleRequest = async (req, res) => {
+  try {
+    const { rejectionReason = 'No reason provided' } = req.body;
+    
+    const transaction = await Transaction.findById(req.params.transactionId)
+      .populate('credit')
+      .populate('buyer', 'name email');
+      
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+    
+    // Verify this is the producer's credit
+    if (!transaction.credit.producer.equals(req.user._id)) {
+      return res.status(403).json({ success: false, message: 'Not authorized to reject this request' });
+    }
+    
+    transaction.status = 'rejected';
+    transaction.responseDate = new Date();
+    await transaction.save();
+    
+    // Create notification for buyer
+    await Notification.create({
+      user: transaction.buyer._id,
+      title: '❌ Purchase Request Rejected',
+      message: `Your purchase request for hydrogen credit "${transaction.credit.creditId}" has been rejected by ${req.user.name}. Reason: ${rejectionReason}`,
+      type: 'purchase_requested',
+      priority: 'normal',
+      relatedModel: 'Transaction',
+      relatedId: transaction._id,
+      actionUrl: `/marketplace`,
+      actionText: 'Browse Marketplace',
+      metadata: {
+        producerName: req.user.name,
+        creditId: transaction.credit.creditId,
+        rejectionReason,
+        rejectedAt: new Date()
+      }
+    });
+    
+    res.status(200).json({ 
+      success: true, 
+      message: 'Sale request rejected successfully',
+      data: transaction 
+    });
+  } catch (error) {
+    console.error('Error rejecting sale request:', error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Get sale history
+// @route   GET /api/producer/sales/history
+exports.getSaleHistory = async (req, res) => {
+  try {
+    const producerCredits = await Credit.find({ producer: req.user._id }, '_id');
+    const creditIds = producerCredits.map(c => c._id);
+    
+    const saleHistory = await Transaction.find({ 
+      credit: { $in: creditIds },
+      status: { $in: ['approved', 'rejected', 'completed'] }
+    })
+    .populate('credit', 'creditId energyAmountMWh facilityName')
+    .populate('buyer', 'name email')
+    .sort({ createdAt: -1 });
+    
+    res.status(200).json({ success: true, data: saleHistory });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
@@ -211,3 +374,4 @@ exports.updateWalletAddress = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Plus, 
@@ -12,98 +12,98 @@ import {
   Clock,
   AlertCircle,
   Trophy,
-  Star
+  Star,
+  DollarSign,
+  ShoppingCart,
+  Bell,
+  User,
+  Loader2
 } from 'lucide-react';
 import DashboardCard from '../components/DashboardCard';
+import { useAuth } from '../contexts/AuthContext';
 
 const Producer = () => {
-  const [showMintModal, setShowMintModal] = useState(false);
-  const [mintForm, setMintForm] = useState({
-    amount: '',
-    productionDate: '',
-    facility: '',
-    source: 'solar',
-    location: ''
-  });
+  const { user } = useAuth();
+  const [credits, setCredits] = useState([]);
+  const [purchaseRequests, setPurchaseRequests] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Sample data for producer's credits
-  const producerCredits = [
-    {
-      id: 'HC-2024-001',
-      amount: 1250,
-      status: 'verified',
-      productionDate: '2024-01-15',
-      facility: 'Solar H2 Plant A',
-      location: 'California, USA',
-      verifiedBy: 'GreenCert Authority',
-      createdAt: '2024-01-16'
-    },
-    {
-      id: 'HC-2024-002',
-      amount: 800,
-      status: 'pending',
-      productionDate: '2024-01-20',
-      facility: 'Solar H2 Plant B',
-      location: 'Texas, USA',
-      verifiedBy: null,
-      createdAt: '2024-01-21'
-    },
-    {
-      id: 'HC-2024-003',
-      amount: 2100,
-      status: 'verified',
-      productionDate: '2024-01-25',
-      facility: 'Wind H2 Plant A',
-      location: 'Iowa, USA',
-      verifiedBy: 'EcoVerify Corp',
-      createdAt: '2024-01-26'
-    },
-    {
-      id: 'HC-2024-004',
-      amount: 950,
-      status: 'rejected',
-      productionDate: '2024-01-30',
-      facility: 'Solar H2 Plant A',
-      location: 'California, USA',
-      verifiedBy: 'GreenCert Authority',
-      createdAt: '2024-01-31'
-    }
-  ];
+  // Fetch producer data
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch producer credits
+        const creditsResponse = await fetch('/api/producer/credits', {
+          credentials: 'include'
+        });
+        if (creditsResponse.ok) {
+          const creditsData = await creditsResponse.json();
+          setCredits(creditsData.data || []);
+        }
+
+        // Fetch pending purchase requests
+        const purchaseRequestsResponse = await fetch('/api/producer/sales/pending', {
+          credentials: 'include'
+        });
+        if (purchaseRequestsResponse.ok) {
+          const purchaseRequestsData = await purchaseRequestsResponse.json();
+          setPurchaseRequests(purchaseRequestsData.data || []);
+        }
+
+        // Fetch dashboard stats
+        const dashboardResponse = await fetch('/api/producer/dashboard', {
+          credentials: 'include'
+        });
+        if (dashboardResponse.ok) {
+          const dashboardData = await dashboardResponse.json();
+          setDashboardStats(dashboardData.data);
+        }
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'verified': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'pending': return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'rejected': return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'Certified': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'Pending': return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'Rejected': return <AlertCircle className="w-4 h-4 text-red-500" />;
       default: return <Clock className="w-4 h-4 text-gray-500" />;
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'verified': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'Certified': return 'bg-green-100 text-green-800';
+      case 'Pending': return 'bg-yellow-100 text-yellow-800';
+      case 'Rejected': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleMintSubmit = (e) => {
-    e.preventDefault();
-    console.log('Minting credits:', mintForm);
-    setShowMintModal(false);
-    setMintForm({
-      amount: '',
-      productionDate: '',
-      facility: '',
-      source: 'solar',
-      location: ''
-    });
-  };
-
-  const totalCredits = producerCredits.reduce((sum, credit) => sum + credit.amount, 0);
-  const verifiedCredits = producerCredits.filter(c => c.status === 'verified').reduce((sum, credit) => sum + credit.amount, 0);
-  const pendingCredits = producerCredits.filter(c => c.status === 'pending').reduce((sum, credit) => sum + credit.amount, 0);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-green-600" />
+          <p className="text-gray-600">Loading producer dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -115,21 +115,21 @@ const Producer = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl font-bold text-gray-900 mb-2"
           >
-            Producer Portal
+            Producer Dashboard
           </motion.h1>
           <p className="text-gray-600">
-            Manage your green hydrogen credit production and tracking.
+            Manage your hydrogen production and track credit sales.
           </p>
         </div>
-        <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          onClick={() => setShowMintModal(true)}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center group shadow-lg"
-        >
-          <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" />
-          Mint New Credit
-        </motion.button>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+              <span className="text-red-800">{error}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -140,13 +140,11 @@ const Producer = () => {
           transition={{ delay: 0.1 }}
         >
           <DashboardCard
-            title="Total Credits Minted"
-            value={totalCredits.toLocaleString()}
-            icon={Factory}
-            trend="up"
-            trendValue="+18.2%"
-            color="green"
-            subtitle="All time"
+            title="Total Credits"
+            value={dashboardStats?.credits?.total?.toString() || '0'}
+            icon={Award}
+            color="blue"
+            subtitle="Credits produced"
           />
         </motion.div>
         
@@ -156,13 +154,11 @@ const Producer = () => {
           transition={{ delay: 0.2 }}
         >
           <DashboardCard
-            title="Verified Credits"
-            value={verifiedCredits.toLocaleString()}
+            title="Certified Credits"
+            value={credits.filter(c => c.status === 'Certified').length.toString()}
             icon={CheckCircle}
-            trend="up"
-            trendValue="+12.5%"
-            color="blue"
-            subtitle="Ready for trading"
+            color="green"
+            subtitle="Ready for sale"
           />
         </motion.div>
         
@@ -172,11 +168,11 @@ const Producer = () => {
           transition={{ delay: 0.3 }}
         >
           <DashboardCard
-            title="Pending Verification"
-            value={pendingCredits.toLocaleString()}
-            icon={Clock}
+            title="Credits Sold"
+            value={credits.filter(c => c.isSold).length.toString()}
+            icon={DollarSign}
             color="orange"
-            subtitle="Awaiting approval"
+            subtitle="Successfully sold"
           />
         </motion.div>
         
@@ -186,241 +182,227 @@ const Producer = () => {
           transition={{ delay: 0.4 }}
         >
           <DashboardCard
-            title="Leaderboard Rank"
-            value="#7"
-            icon={Trophy}
-            trend="up"
-            trendValue="+3 positions"
+            title="Purchase Requests"
+            value={purchaseRequests.length.toString()}
+            icon={Bell}
             color="purple"
-            subtitle="This month"
+            subtitle="Awaiting response"
           />
         </motion.div>
       </div>
 
-      {/* Producer Badge */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 mb-8 text-white"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="bg-white/20 p-3 rounded-xl">
-              <Award className="w-8 h-8" />
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold">Gold Producer Badge</h3>
-              <p className="text-green-100">Top 10% performer this quarter</p>
-            </div>
+      {/* Purchase Requests Section */}
+      {purchaseRequests.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 mb-8"
+        >
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <Bell className="w-5 h-5 mr-2 text-orange-600" />
+              Purchase Requests ({purchaseRequests.length})
+            </h3>
           </div>
-          <div className="flex items-center space-x-2">
-            <Star className="w-6 h-6 text-yellow-300 fill-current" />
-            <Star className="w-6 h-6 text-yellow-300 fill-current" />
-            <Star className="w-6 h-6 text-yellow-300 fill-current" />
-            <Star className="w-6 h-6 text-yellow-300 fill-current" />
-            <Star className="w-6 h-6 text-white/50" />
+          
+          <div className="divide-y divide-gray-200">
+            {purchaseRequests.map((request, index) => (
+              <motion.div
+                key={request._id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 * index }}
+                className="p-6 hover:bg-gray-50"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900 mb-2">
+                      Purchase Request for {request.credit?.creditId}
+                    </h4>
+                    <p className="text-gray-600 mb-3">
+                      {request.buyer?.name} wants to purchase this hydrogen credit
+                    </p>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
+                      <div className="flex items-center">
+                        <User className="w-4 h-4 mr-2" />
+                        {request.buyer?.name}
+                      </div>
+                      <div className="flex items-center">
+                        <Zap className="w-4 h-4 mr-2" />
+                        {request.credit?.energyAmountMWh} MWh
+                      </div>
+                      <div className="flex items-center">
+                        <Factory className="w-4 h-4 mr-2" />
+                        {request.credit?.facilityName}
+                      </div>
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {new Date(request.requestDate).toLocaleDateString()}
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Energy Source:</span> {request.credit?.energySource}
+                    </div>
+                  </div>
+                  
+                  <div className="ml-6 flex space-x-3">
+                    <button
+                      className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(`/api/producer/sales/${request._id}/reject`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                              rejectionReason: 'Producer declined the purchase request'
+                            })
+                          });
+                          
+                          if (response.ok) {
+                            setPurchaseRequests(prev => prev.filter(r => r._id !== request._id));
+                            alert('Purchase request declined. The buyer has been notified.');
+                          } else {
+                            const errorData = await response.json();
+                            alert('Failed to decline request: ' + errorData.message);
+                          }
+                        } catch (error) {
+                          console.error('Error declining request:', error);
+                          alert('Failed to decline request');
+                        }
+                      }}
+                    >
+                      Decline
+                    </button>
+                    <button
+                      className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(`/api/producer/sales/${request._id}/accept`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include'
+                          });
+                          
+                          if (response.ok) {
+                            setPurchaseRequests(prev => prev.filter(r => r._id !== request._id));
+                            alert('Purchase request accepted! Credit has been transferred to the buyer.');
+                            // Refresh credits to show updated sold status
+                            window.location.reload();
+                          } else {
+                            const errorData = await response.json();
+                            alert('Failed to accept request: ' + errorData.message);
+                          }
+                        } catch (error) {
+                          console.error('Error accepting request:', error);
+                          alert('Failed to accept request');
+                        }
+                      }}
+                    >
+                      Accept Sale
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
-      {/* Credits Table */}
+      {/* Credits Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+        className="bg-white rounded-2xl shadow-sm border border-gray-200"
       >
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Your Credit History</h3>
-          <p className="text-gray-600 mt-1">Track all your minted hydrogen credits</p>
+          <h3 className="text-lg font-semibold text-gray-900">Your Credits</h3>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Credit ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Facility
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Production Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Verified By
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {producerCredits.map((credit, index) => (
-                <tr key={credit.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                      <span className="text-sm font-medium text-gray-900">{credit.id}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <Zap className="w-4 h-4 text-green-500 mr-2" />
-                      <span className="text-sm text-gray-900">{credit.amount.toLocaleString()} MWh</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      {getStatusIcon(credit.status)}
-                      <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(credit.status)}`}>
-                        {credit.status.charAt(0).toUpperCase() + credit.status.slice(1)}
+        <div className="divide-y divide-gray-200">
+          {credits.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <Factory className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>No credits found</p>
+            </div>
+          ) : (
+            credits.map((credit, index) => (
+              <motion.div
+                key={credit._id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 * index }}
+                className="p-6 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <span className="font-medium text-gray-900">{credit.creditId}</span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(credit.status)}`}>
+                        {credit.status}
                       </span>
+                      {credit.isSold && (
+                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                          SOLD
+                        </span>
+                      )}
+                      {credit.tokenId && (
+                        <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+                          Token: {credit.tokenId}
+                        </span>
+                      )}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm text-gray-900">{credit.facility}</div>
-                      <div className="flex items-center text-xs text-gray-500">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        {credit.location}
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
+                      <div className="flex items-center">
+                        <Zap className="w-4 h-4 mr-2" />
+                        {credit.energyAmountMWh?.toLocaleString()} MWh
+                      </div>
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {credit.facilityLocation}
+                      </div>
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {new Date(credit.productionDate).toLocaleDateString()}
+                      </div>
+                      <div className="flex items-center">
+                        {getStatusIcon(credit.status)}
+                        <span className="ml-2">{credit.energySource}</span>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                      {new Date(credit.productionDate).toLocaleDateString()}
+                    
+                    <div className="flex items-center text-sm text-gray-600">
+                      <span className="font-medium">Facility:</span>
+                      <span className="ml-2">{credit.facilityName}</span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {credit.verifiedBy || 'Pending'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  
+                  <div className="text-right ml-6">
+                    {credit.status === 'Certified' && !credit.isSold ? (
+                      <div className="text-sm text-green-600 font-medium">
+                        Available for Sale
+                      </div>
+                    ) : credit.isSold ? (
+                      <div className="text-sm text-blue-600 font-medium">
+                        Sold on {new Date(credit.soldAt).toLocaleDateString()}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">
+                        {credit.status}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
       </motion.div>
-
-      {/* Mint Modal */}
-      {showMintModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-2xl p-6 w-full max-w-md"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Mint New Credit</h3>
-              <button
-                onClick={() => setShowMintModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <AlertCircle className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleMintSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Credit Amount (MWh)
-                </label>
-                <input
-                  type="number"
-                  value={mintForm.amount}
-                  onChange={(e) => setMintForm({...mintForm, amount: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter amount"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Production Date
-                </label>
-                <input
-                  type="date"
-                  value={mintForm.productionDate}
-                  onChange={(e) => setMintForm({...mintForm, productionDate: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Facility Name
-                </label>
-                <input
-                  type="text"
-                  value={mintForm.facility}
-                  onChange={(e) => setMintForm({...mintForm, facility: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter facility name"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Energy Source
-                </label>
-                <select
-                  value={mintForm.source}
-                  onChange={(e) => setMintForm({...mintForm, source: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="solar">Solar</option>
-                  <option value="wind">Wind</option>
-                  <option value="hydro">Hydro</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  value={mintForm.location}
-                  onChange={(e) => setMintForm({...mintForm, location: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter location"
-                  required
-                />
-              </div>
-              
-              <div className="flex space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowMintModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all"
-                >
-                  Mint Credit
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
     </div>
   );
 };

@@ -30,6 +30,9 @@ const NotificationSchema = new mongoose.Schema({
         'credit_minted',
         'credit_transferred',
         'credit_retired',
+        'purchase_requested',
+        'sale_completed',
+        'sale_rejected',
         'system_update',
         'general'
       ],

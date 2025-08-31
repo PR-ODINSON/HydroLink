@@ -4,7 +4,7 @@ const {
   getDashboardStats,
   getAvailableCredits,
   purchaseCredit,
-  getPurchaseHistory,
+  getPurchasedCredits,
   retireCredit,
   getRetiredCredits,
   getNotifications,
@@ -23,7 +23,7 @@ router.get('/dashboard', getDashboardStats);
 // Credits
 router.get('/credits/available', getAvailableCredits);
 router.post('/credits/:creditId/purchase', purchaseCredit);
-router.get('/credits/purchase-history', getPurchaseHistory);
+router.get('/credits/purchased', getPurchasedCredits);
 router.post('/credits/:tokenId/retire', retireCredit);
 router.get('/credits/retired', getRetiredCredits);
 

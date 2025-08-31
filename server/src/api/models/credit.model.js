@@ -126,6 +126,16 @@ const CreditSchema = new mongoose.Schema({
     type: String,
     maxlength: [500, 'Retirement reason cannot exceed 500 characters']
   },
+  // Sale status to prevent double counting
+  isSold: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  soldAt: {
+    type: Date,
+    default: null
+  },
   // Blockchain transaction information
   blockchain: {
     mintTxHash: {
@@ -266,6 +276,20 @@ CreditSchema.methods.isPending = function() {
   return this.status === 'Pending';
 };
 
+CreditSchema.methods.sellTobuyer = function(buyerId) {
+  if (this.isSold) {
+    throw new Error('Credit has already been sold to prevent double counting');
+  }
+  this.isSold = true;
+  this.soldAt = new Date();
+  this.currentOwner = buyerId;
+  return this.save();
+};
+
+CreditSchema.methods.canBeSold = function() {
+  return !this.isSold && this.status === 'Certified';
+};
+
 // Static methods
 CreditSchema.statics.findByProducer = function(producerId) {
   return this.find({ producer: producerId }).populate('producer certifier', 'name email role');
@@ -277,6 +301,19 @@ CreditSchema.statics.findByCertifier = function(certifierId) {
 
 CreditSchema.statics.findByStatus = function(status) {
   return this.find({ status }).populate('producer certifier', 'name email role');
+};
+
+CreditSchema.statics.findAvailableForPurchase = function() {
+  return this.find({ 
+    status: 'Certified', 
+    isSold: false 
+  }).populate('producer', 'name email role walletAddress')
+    .populate('certifier', 'name email role walletAddress')
+    .sort({ createdAt: -1 });
+};
+
+CreditSchema.statics.findSoldCredits = function() {
+  return this.find({ isSold: true }).populate('producer certifier currentOwner', 'name email role walletAddress');
 };
 
 CreditSchema.statics.getCreditStats = async function() {

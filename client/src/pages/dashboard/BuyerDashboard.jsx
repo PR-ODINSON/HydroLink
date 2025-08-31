@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ShoppingCart, 
@@ -12,14 +12,124 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Wallet,
-  Recycle
+  Recycle,
+  User,
+  MapPin,
+  Calendar,
+  Factory,
+  CheckCircle,
+  Loader2,
+  AlertCircle,
+  X
 } from 'lucide-react';
 import StatsGrid from '../../components/dashboard/StatsGrid';
 import ChartsSection from '../../components/dashboard/ChartsSection';
 import ActivityList from '../../components/dashboard/ActivityList';
 import QuickActions from '../../components/dashboard/QuickActions';
+import { useAuth } from '../../contexts/AuthContext';
 
 const BuyerDashboard = () => {
+  const { user } = useAuth();
+  const [availableCredits, setAvailableCredits] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedCredit, setSelectedCredit] = useState(null);
+  const [purchasing, setPurchasing] = useState(false);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch available credits
+        const creditsResponse = await fetch('/api/buyer/credits/available', {
+          credentials: 'include'
+        });
+        if (creditsResponse.ok) {
+          const creditsData = await creditsResponse.json();
+          console.log('Credits received:', creditsData.data);
+          setAvailableCredits(Array.isArray(creditsData.data) ? creditsData.data : creditsData);
+
+        } else {
+          console.error('Failed to fetch credits:', creditsResponse.status);
+        }
+
+        // Fetch dashboard stats
+        const dashboardResponse = await fetch('/api/buyer/dashboard', {
+          credentials: 'include'
+        });
+        if (dashboardResponse.ok) {
+          const dashboardData = await dashboardResponse.json();
+          setDashboardStats(dashboardData.data);
+        }
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  // Handle purchase credit
+  const handlePurchaseClick = (credit) => {
+    setSelectedCredit(credit);
+    setShowPurchaseModal(true);
+  };
+
+  const handleConfirmPurchase = async () => {
+    if (!selectedCredit) return;
+
+    try {
+      setPurchasing(true);
+      const response = await fetch(`/api/buyer/credits/${selectedCredit._id}/purchase`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setShowPurchaseModal(false);
+        setSelectedCredit(null);
+        
+        // Show success message with better formatting
+        const successMessage = `
+🎉 Purchase request sent successfully!
+
+✅ The producer will receive:
+• Email notification
+• In-app notification
+• Details about your request
+
+📱 You will be notified when they respond.
+`;
+        alert(successMessage);
+        
+        // Refresh the data
+        window.location.reload();
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to purchase credit');
+      }
+    } catch (error) {
+      console.error('Error purchasing credit:', error);
+      setError('Failed to purchase credit');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
   // Mock data for buyer dashboard
   const stats = [
     {
@@ -129,35 +239,7 @@ const BuyerDashboard = () => {
     }
   ];
 
-  const availableCredits = [
-    {
-      id: 'HC-2025-015',
-      producer: 'GreenTech Industries',
-      amount: 450,
-      price: 47.50,
-      source: 'Solar',
-      certification: 'Gold Standard',
-      co2Reduction: 2.3
-    },
-    {
-      id: 'HC-2025-016',
-      producer: 'EcoEnergy Corp',
-      amount: 320,
-      source: 'Wind',
-      price: 44.00,
-      certification: 'Verified',
-      co2Reduction: 1.8
-    },
-    {
-      id: 'HC-2025-017',
-      producer: 'SolarMax Energy',
-      amount: 680,
-      price: 49.25,
-      source: 'Solar',
-      certification: 'Premium',
-      co2Reduction: 3.1
-    }
-  ];
+  // availableCredits now comes from state (fetched from backend)
 
   const quickActions = [
     {
@@ -204,9 +286,18 @@ const BuyerDashboard = () => {
     }
   };
 
-  const handlePurchase = (creditId) => {
-    console.log('Purchasing credit:', creditId);
-  };
+  // handlePurchase is now replaced by handlePurchaseClick
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-green-600" />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -222,10 +313,19 @@ const BuyerDashboard = () => {
         <p className="text-gray-600">
           Manage your credit portfolio and track sustainability impact.
         </p>
+        
+        {error && (
+          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+              <span className="text-red-800">{error}</span>
+            </div>
+          </div>
+        )}
       </motion.div>
 
       {/* Stats Grid */}
-      <StatsGrid stats={stats} className="mb-8" />
+      {/* <StatsGrid stats={stats} className="mb-8" /> */}
 
       {/* Sustainability Impact Widget */}
       <motion.div
@@ -306,39 +406,152 @@ const BuyerDashboard = () => {
         className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8"
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Available Credits</h3>
+          <h3 className="text-lg font-semibold text-gray-900">All Producer Credits</h3>
           <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
             View Marketplace
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {availableCredits.map((credit) => (
-            <div key={credit.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-900">{credit.id}</span>
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                  {credit.source}
-                </span>
-              </div>
-              
-              <p className="text-sm text-gray-600 mb-2">{credit.producer}</p>
-              <p className="text-lg font-bold text-gray-900 mb-1">{credit.amount} credits</p>
-              <p className="text-sm text-green-600 font-medium mb-3">${credit.price} per credit</p>
-              
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                <span>{credit.certification}</span>
-                <span>{credit.co2Reduction} tons CO₂</span>
-              </div>
-              
-              <button
-                onClick={() => handlePurchase(credit.id)}
-                className="w-full bg-green-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-              >
-                Purchase
-              </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {availableCredits.length === 0 ? (
+            <div className="col-span-full text-center py-8">
+              <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Credits Found</h3>
+              <p className="text-gray-500">No hydrogen credits found in the database.</p>
             </div>
-          ))}
+          ) : (
+            availableCredits.map((credit) => (
+              <motion.div
+                key={credit._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden bg-white relative ${
+                  credit.isSold ? 'opacity-75' : ''
+                }`}
+              >
+                {/* Sold Overlay */}
+                {credit.isSold && (
+                  <div className="absolute inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-10 rounded-xl">
+                    <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12">
+                      SOLD OUT
+                    </div>
+                  </div>
+                )}
+                {/* Smart Contract Header */}
+                <div className="bg-gradient-to-r from-green-500 to-blue-600 px-4 py-3">
+                  <div className="flex items-center justify-between text-white">
+                    <div>
+                      <h3 className="font-bold text-base">{credit.creditId}</h3>
+                      <p className="text-green-100 text-xs">Smart Contract #{credit.tokenId || 'Pending'}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-bold">{credit.energyAmountMWh}</div>
+                      <div className="text-green-100 text-xs">MWh</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Producer Information */}
+                <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{credit.producer?.name || 'Unknown Producer'}</p>
+                      <p className="text-xs text-gray-600">Producer</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Credit Details */}
+                <div className="px-4 py-3 space-y-3">
+                  {/* Status and Energy Source */}
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      {credit.status}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {credit.energySource}
+                    </span>
+                  </div>
+
+                  {/* Facility Information */}
+                  <div className="space-y-1">
+                    <div className="flex items-center text-xs text-gray-600">
+                      <Factory className="w-3 h-3 mr-1 text-gray-400" />
+                      <span className="font-medium">Facility:</span>
+                      <span className="ml-1 truncate">{credit.facilityName}</span>
+                    </div>
+                    <div className="flex items-center text-xs text-gray-600">
+                      <MapPin className="w-3 h-3 mr-1 text-gray-400" />
+                      <span className="truncate">{credit.facilityLocation}</span>
+                    </div>
+                    <div className="flex items-center text-xs text-gray-600">
+                      <Calendar className="w-3 h-3 mr-1 text-gray-400" />
+                      <span>Produced: {new Date(credit.productionDate).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Environmental Impact */}
+                  {credit.environmentalImpact?.co2Avoided && (
+                    <div className="bg-green-50 rounded-lg p-2">
+                      <div className="flex items-center text-xs text-green-700">
+                        <Leaf className="w-3 h-3 mr-1" />
+                        <span>Reduces {credit.environmentalImpact.co2Avoided}t CO₂</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Certification Info */}
+                  <div className="bg-blue-50 rounded-lg p-2">
+                    <div className="flex items-center text-xs text-blue-700">
+                      <Award className="w-3 h-3 mr-1" />
+                      <span>Certified by {credit.certifier?.name || 'Authority'}</span>
+                    </div>
+                    {credit.certificationDate && (
+                      <div className="text-xs text-blue-600 mt-1">
+                        Certified: {new Date(credit.certificationDate).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Additional Credit Info */}
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <div>Credit ID: {credit.creditId}</div>
+                    {credit.tokenId && <div>Blockchain Token: {credit.tokenId}</div>}
+                    <div>Network: {credit.blockchain?.network || 'Polygon'}</div>
+                    <div>Status: {credit.status} • Available: {credit.isSold ? 'No' : 'Yes'}</div>
+                  </div>
+                </div>
+
+                {/* Purchase Button */}
+                <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
+                  {credit.status === 'Certified' && !credit.isSold ? (
+                    <button
+                      onClick={() => handlePurchaseClick(credit)}
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center justify-center font-medium text-sm shadow-sm"
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Register to Purchase
+                    </button>
+                  ) : (
+                    <div 
+                      className={`w-full py-2 px-4 rounded-lg flex items-center justify-center font-medium text-sm ${
+                        credit.isSold 
+                          ? 'bg-red-100 text-red-700 cursor-not-allowed' 
+                          : 'bg-gray-300 text-gray-600'
+                      }`}
+                      style={credit.isSold ? { cursor: 'not-allowed' } : {}}
+                    >
+                      {credit.isSold ? '❌ Already Sold' : `📋 ${credit.status}`}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
       </motion.div>
 
@@ -359,6 +572,221 @@ const BuyerDashboard = () => {
         {/* Quick Actions */}
         <QuickActions actions={quickActions} title="Trading Actions" />
       </div>
+
+      {/* Purchase Confirmation Modal */}
+      {showPurchaseModal && selectedCredit && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">Register and Send Purchase Request</h3>
+              <button
+                onClick={() => setShowPurchaseModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Smart Contract Details */}
+            <div className="space-y-6">
+              {/* Contract Header */}
+              <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xl font-bold">{selectedCredit.creditId}</h4>
+                    <p className="text-green-100">Smart Contract #{selectedCredit.tokenId || 'Pending'}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold">{selectedCredit.energyAmountMWh}</div>
+                    <div className="text-green-100">MWh Energy</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Producer Information */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <h5 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <User className="w-5 h-5 mr-2 text-blue-600" />
+                  Producer Information
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Producer Name</p>
+                    <p className="font-medium text-gray-900">{selectedCredit.producer?.name || 'Unknown Producer'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Producer Email</p>
+                    <p className="font-medium text-gray-900">{selectedCredit.producer?.email || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Wallet Address</p>
+                    <p className="font-medium text-gray-900 text-xs">
+                      {selectedCredit.producer?.walletAddress || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Producer Role</p>
+                    <p className="font-medium text-gray-900">{selectedCredit.producer?.role || 'Producer'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Credit Details */}
+              <div className="bg-blue-50 rounded-xl p-4">
+                <h5 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <Zap className="w-5 h-5 mr-2 text-green-600" />
+                  Smart Contract Details
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Energy Source</p>
+                    <p className="font-medium text-gray-900">{selectedCredit.energySource}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Status</p>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      {selectedCredit.status}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Production Date</p>
+                    <p className="font-medium text-gray-900">
+                      {new Date(selectedCredit.productionDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Certification Date</p>
+                    <p className="font-medium text-gray-900">
+                      {selectedCredit.certificationDate ? 
+                        new Date(selectedCredit.certificationDate).toLocaleDateString() : 
+                        'N/A'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Facility Information */}
+              <div className="bg-green-50 rounded-xl p-4">
+                <h5 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <Factory className="w-5 h-5 mr-2 text-orange-600" />
+                  Facility Information
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Facility Name</p>
+                    <p className="font-medium text-gray-900">{selectedCredit.facilityName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Location</p>
+                    <p className="font-medium text-gray-900">{selectedCredit.facilityLocation}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Environmental Impact */}
+              {selectedCredit.environmentalImpact?.co2Avoided && (
+                <div className="bg-green-50 rounded-xl p-4">
+                  <h5 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <Leaf className="w-5 h-5 mr-2 text-green-600" />
+                    Environmental Impact
+                  </h5>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">CO₂ Avoided</p>
+                      <p className="font-medium text-gray-900">{selectedCredit.environmentalImpact.co2Avoided}t</p>
+                    </div>
+                    {selectedCredit.environmentalImpact.waterUsed && (
+                      <div>
+                        <p className="text-sm text-gray-600">Water Used</p>
+                        <p className="font-medium text-gray-900">{selectedCredit.environmentalImpact.waterUsed}L</p>
+                      </div>
+                    )}
+                    {selectedCredit.environmentalImpact.landUsed && (
+                      <div>
+                        <p className="text-sm text-gray-600">Land Used</p>
+                        <p className="font-medium text-gray-900">{selectedCredit.environmentalImpact.landUsed} acres</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Certification Information */}
+              <div className="bg-purple-50 rounded-xl p-4">
+                <h5 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <Award className="w-5 h-5 mr-2 text-purple-600" />
+                  Certification Details
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Certified By</p>
+                    <p className="font-medium text-gray-900">
+                      {selectedCredit.certifier?.name || 'Verification Authority'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Blockchain Network</p>
+                    <p className="font-medium text-gray-900">{selectedCredit.blockchain?.network || 'Polygon'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Purchase Confirmation */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                <div className="flex items-start">
+                  <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h6 className="font-semibold text-yellow-800 mb-1">Register to Purchase</h6>
+                    <p className="text-sm text-yellow-700">
+                      By clicking "Send Request", you will register to purchase this credit and send a request to the producer. 
+                      The producer will receive an email and in-app notification about your request.
+                      They can then approve or reject your purchase request from their Reports section.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex space-x-4 mt-8">
+              <button
+                onClick={() => setShowPurchaseModal(false)}
+                disabled={purchasing}
+                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmPurchase}
+                disabled={purchasing}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all font-medium disabled:opacity-50 flex items-center justify-center"
+              >
+                {purchasing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-5 h-5 mr-2" />
+                    Send Request
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 };
