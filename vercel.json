@@ -1,26 +1,12 @@
 {
-  "version": 2,
-  "name": "hydrolink",
-  "builds": [
-    {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "client/dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/client/dist/index.html"
-    }
-  ],
-  "outputDirectory": "client/dist",
   "buildCommand": "cd client && npm run build",
+  "outputDirectory": "client/dist",
   "installCommand": "cd client && npm install",
-  "framework": null
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

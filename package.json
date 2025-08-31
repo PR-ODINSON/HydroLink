@@ -7,13 +7,9 @@
     "dev": "cd client && npm run dev",
     "preview": "cd client && npm run preview",
     "install:client": "cd client && npm install",
-<<<<<<< HEAD
     "vercel-build": "cd client && npm install && npm run build",
-    "start": "cd client && npm run preview"
-=======
-    "start": "cd server && node server.js"
-
->>>>>>> 1f5839880139fd475133e7d41fa41ed154e643bf
+    "start": "cd client && npm run preview",
+    "start:server": "cd server && node server.js"
   },
   "workspaces": [
     "client"
