@@ -27,3 +27,4 @@ dist-ssr
 /blockchain/.env
 /blockchain/artifacts/
 /blockchain/cache/
+/client/.env

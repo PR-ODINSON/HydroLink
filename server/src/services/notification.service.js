@@ -18,7 +18,7 @@ class NotificationService {
   createEmailTransporter() {
     // Configure email transporter based on environment
     if (process.env.NODE_ENV === 'production' && nodemailer) {
-      return nodemailer.createTransporter({
+      return nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: process.env.EMAIL_USER,

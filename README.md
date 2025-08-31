@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/lucide-react/lucide/main/icons/leaf.svg" alt="HydroLink Logo" width="80" height="80">
   
   # 🌱 HydroLink
   
@@ -13,8 +12,6 @@
   [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green.svg)](https://www.mongodb.com/)
   [![Ethereum](https://img.shields.io/badge/Blockchain-Polygon-purple.svg)](https://polygon.technology/)
   [![Vercel](https://img.shields.io/badge/Deployed-Vercel-black.svg)](https://vercel.com/)
-  
-  [🚀 Live Demo](https://hydrolink-ten.vercel.app) • [📖 Documentation](#documentation) • [🛠️ API Reference](#api-reference) • [💬 Community](#support--community)
   
 </div>
 
