@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
       host: true,
       proxy: {
         '/api': {
-          target: env.VITE_API_URL || 'https://hydrolink.onrender.com' ||'http://localhost:3001',
+          target: env.VITE_API_URL ,
           changeOrigin: true,
           secure: false,
           timeout: 60000,
