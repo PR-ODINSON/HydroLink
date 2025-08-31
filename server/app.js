@@ -26,6 +26,8 @@ const allowedOrigins = [
   'http://localhost:3000' // for local dev
 ].filter(Boolean); // remove undefined
 
+console.log(process.env.CLIENT_URL);
+
 app.use((req, res, next) => {
   res.header('Vary', 'Origin'); // prevent cache poisoning
   next();
