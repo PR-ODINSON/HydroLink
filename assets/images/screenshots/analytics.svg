@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="#f8fafc"/>
+  
+  <!-- Header bar -->
+  <rect width="1920" height="80" fill="#10b981"/>
+  
+  <!-- Content area -->
+  <rect x="40" y="120" width="1840" height="880" fill="white" rx="8" stroke="#e5e7eb"/>
+  
+  <!-- Title -->
+  <text x="960" y="50" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">Analytics Dashboard</text>
+  
+  <!-- Placeholder text -->
+  <text x="960" y="540" font-family="Arial, sans-serif" font-size="18" fill="#1f2937" text-anchor="middle">Screenshot Placeholder</text>
+  <text x="960" y="570" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle">Replace with actual analytics dashboard</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="80" cy="160" r="4" fill="#10b981"/>
+  <circle cx="100" cy="160" r="4" fill="#e5e7eb"/>
+  <circle cx="120" cy="160" r="4" fill="#e5e7eb"/>
+  
+  <!-- Mock content boxes -->
+  <rect x="80" y="200" width="200" height="60" fill="#f3f4f6" rx="4"/>
+  <rect x="300" y="200" width="200" height="60" fill="#f3f4f6" rx="4"/>
+  <rect x="520" y="200" width="200" height="60" fill="#f3f4f6" rx="4"/>
+</svg>

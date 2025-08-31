@@ -10,40 +10,34 @@ const WalletBalance = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const fetchBalance = async () => {
-    if (!user?.walletAddress) {
-      setBalance(0);
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       setError('');
-      
-      // Fetch balance from blockchain service
-      const response = await fetch(`/api/blockchain/balance/${user.walletAddress}`, {
-        credentials: 'include'
+
+      // Determine API endpoint based on user role
+      const endpoint = user?.role === 'Producer' ? '/api/producer/wallet' : '/api/buyer/wallet';
+
+      const response = await fetch(endpoint, {
+        credentials: 'include',
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setBalance(data.balance || 0);
+          setBalance(data.data.hydroCoinBalance || 0);
           setLastUpdated(new Date());
         } else {
-          throw new Error(data.message || 'Failed to fetch balance');
+          throw new Error(data.message || 'Failed to fetch wallet data');
         }
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error fetching balance:', error);
-      setError('Failed to load balance');
-      // Set a mock balance for demo purposes when API fails
-      const mockBalance = Math.floor(Math.random() * 1000) + 100;
-      setBalance(mockBalance);
-      setLastUpdated(new Date());
-      console.log('Using mock balance for demo:', mockBalance);
+      console.error('Error fetching wallet data:', error);
+      setError('Failed to load wallet data');
     } finally {
       setLoading(false);
     }

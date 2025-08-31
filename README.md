@@ -1,694 +1,910 @@
-# 🌱 HydroLink – Blockchain-Powered Green Hydrogen Credits Platform
-
-<p align="center">
-  <img src="./docs/images/hydrolink-banner.png" alt="HydroLink Banner" width="800"/>
-</p>
-
-<p align="center">
-  <strong>A transparent and trusted platform for minting, verifying, trading, and retiring green hydrogen credits — built with blockchain, AI, and gamification.</strong>
-</p>
-
-<p align="center">
-  <a href="#overview">Overview</a> •
-  <a href="#features">Features</a> •
-  <a href="#tech-stack">Tech Stack</a> •
-  <a href="#ui-showcase">UI Showcase</a> •
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#api-documentation">API Docs</a> •
-  <a href="#contributing">Contributing</a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"/>
-  <img src="https://img.shields.io/badge/React-19.1.1-blue.svg" alt="React 19.1.1"/>
-  <img src="https://img.shields.io/badge/Node.js-18+-green.svg" alt="Node.js 18+"/>
-  <img src="https://img.shields.io/badge/Solidity-0.8.20-orange.svg" alt="Solidity 0.8.20"/>
-  <img src="https://img.shields.io/badge/MongoDB-6.0+-darkgreen.svg" alt="MongoDB 6.0+"/>
-</p>
+<div align="center">
+  
+  # 🌱 HydroLink
+  
+  ### Blockchain-Powered Green Hydrogen Credit System
+  
+  *Revolutionizing sustainable energy markets through transparent, secure, and verifiable green hydrogen credit trading*
+  
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
+  [![React](https://img.shields.io/badge/React-19.x-blue.svg)](https://reactjs.org/)
+  [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green.svg)](https://www.mongodb.com/)
+  [![Ethereum](https://img.shields.io/badge/Blockchain-Polygon-purple.svg)](https://polygon.technology/)
+  [![Vercel](https://img.shields.io/badge/Deployed-Vercel-black.svg)](https://vercel.com/)
+  
+</div>
 
 ---
 
-## 📖 Overview
+## 📸 Platform Showcase
 
-HydroLink is a **full-stack decentralized platform** that enables end-to-end management of **green hydrogen credits**. It empowers **Producers, Certifiers, and Buyers** to seamlessly participate in a secure, transparent, and gamified ecosystem.
+<div align="center">
 
-### 🎯 Mission
-To accelerate the adoption of green hydrogen by providing a trusted, transparent, and efficient marketplace for hydrogen credits, backed by blockchain technology and powered by AI-driven fraud detection.
+### 🌐 Landing Page
+*Beautiful, responsive design with engaging animations*
 
-### 🌍 Impact
-- **Environmental**: Supporting the transition to clean energy through verified green hydrogen credits
-- **Economic**: Creating new revenue streams for hydrogen producers and carbon offset markets
-- **Social**: Promoting transparency and trust in renewable energy transactions
-
----
-
-## ✨ Features
-
-### 🔒 **Blockchain Security**
-- Immutable ledger ensures tamper-proof transactions
-- Smart contracts automate credit lifecycle management
-- Ethereum/Polygon blockchain integration for transparency
-
-### 🤖 **AI-Powered Fraud Detection**
-- Machine learning models detect anomalies in credit minting
-- Real-time transaction monitoring and validation
-- Behavioral pattern analysis for suspicious activities
-
-### 📱 **QR Code Verification**
-- Instant credit authentication through QR scanning
-- Mobile-friendly verification interface
-- Offline verification capabilities
-
-### 🏆 **Gamification & Incentives**
-- Producer leaderboards and achievement systems
-- Sustainability challenges and rewards
-- Community engagement features
-
-### 📊 **Role-Based Dashboards**
-
-#### **Producer Portal**
-- Mint and track hydrogen credits
-- Production facility management
-- Performance analytics and insights
-- Leaderboard rankings
-
-#### **Certifier Dashboard**
-- Validate and approve credit submissions
-- Review production documentation
-- Compliance monitoring tools
-- Audit trail management
-
-#### **Buyer Marketplace**
-- Browse and purchase available credits
-- Retire credits for carbon offsetting
-- Portfolio management
-- Impact reporting
-
-### 📈 **Advanced Analytics**
-- Market trend analysis
-- Credit issuance history
-- Carbon impact calculations
-- Performance benchmarking
-
----
-
-## 🛠️ Tech Stack
-
-### **Frontend**
-- **React 19.1.1** - Latest React with concurrent features
-- **TailwindCSS 4** - Utility-first CSS framework
-- **Framer Motion** - Production-ready animations
-- **React Router** - Client-side routing
-- **Recharts** - Data visualization
-- **Lucide Icons** - Beautiful iconography
-
-### **Backend**
-- **Node.js/Express** - Server runtime and framework
-- **MongoDB** - NoSQL database for flexible data storage
-- **Mongoose** - Object modeling for MongoDB
-- **JWT** - Secure authentication
-- **bcryptjs** - Password hashing
-- **Express Validator** - Input validation
-
-### **Blockchain**
-- **Solidity 0.8.20** - Smart contract development
-- **Hardhat** - Development environment
-- **OpenZeppelin** - Secure contract libraries
-- **Ethers.js** - Blockchain interaction library
-- **Polygon Mumbai** - Testnet deployment
-
-### **DevOps & Deployment**
-- **Vercel** - Frontend hosting
-- **Railway/Render** - Backend deployment
-- **MongoDB Atlas** - Cloud database
-- **GitHub Actions** - CI/CD pipeline
-
----
-
-## 🎨 UI Showcase
-
-### 🏠 Landing Page
-<p align="center">
-  <img src="./docs/images/landing-page.png" alt="Landing Page" width="800"/>
-</p>
-
-*Beautiful hero section with animated statistics and feature highlights*
-
-### 📊 Dashboard Overview
-<p align="center">
-  <img src="./docs/images/dashboard-overview.png" alt="Dashboard Overview" width="800"/>
-</p>
-
-*Comprehensive analytics with interactive charts and real-time data*
+![Landing Page](./assets/images/screenshots/Landing.png)
 
 ### 🏭 Producer Dashboard
-<p align="center">
-  <img src="./docs/images/producer-dashboard.png" alt="Producer Dashboard" width="800"/>
-</p>
+*Comprehensive production tracking and credit management*
 
-*Streamlined interface for minting credits and tracking production*
+![Producer Dashboard](./assets/images/screenshots/producer-dashboard.png)
 
-### 🛡️ Certifier Portal
-<p align="center">
-  <img src="./docs/images/certifier-dashboard.png" alt="Certifier Dashboard" width="800"/>
-</p>
+### 🛡️ Certifier Dashboard
+*Streamlined verification workflow with AI assistance*
 
-*Professional tools for credit validation and compliance monitoring*
+![Certifier Dashboard](./assets/images/screenshots/certifier-dashboard.png)
 
-### 🛒 Buyer Marketplace
-<p align="center">
-  <img src="./docs/images/buyer-marketplace.png" alt="Buyer Marketplace" width="800"/>
-</p>
+### 💼 Buyer Dashboard
+*Portfolio management and marketplace exploration*
 
-*Intuitive marketplace for browsing and purchasing credits*
+![Buyer Dashboard](./assets/images/screenshots/buyer-dashbaord.png)
 
-### 🔍 Credit Explorer
-<p align="center">
-  <img src="./docs/images/credit-explorer.png" alt="Credit Explorer" width="800"/>
-</p>
+### 🏪 Marketplace
+*Discover and trade verified green hydrogen credits*
 
-*Detailed credit tracking with QR verification*
+![Marketplace](./assets/images/screenshots/buyer-marketplace.png)
 
-### 🏆 Leaderboard & Achievements
-<p align="center">
-  <img src="./docs/images/leaderboard.png" alt="Leaderboard" width="800"/>
-</p>
+### 📊 Analytics & Reports
+*Detailed insights and sustainability tracking*
 
-*Gamified experience with rankings and achievement badges*
+![Analytics Dashboard](./assets/images/screenshots/producer-analytics.png)
 
-### 📱 Mobile Experience
-<p align="center">
-  <img src="./docs/images/mobile-responsive.png" alt="Mobile Responsive" width="400"/>
-</p>
-
-*Fully responsive design optimized for all devices*
+</div>
 
 ---
 
-## 📂 Project Structure
+## 🎭 User Journey Screenshots
+
+<div align="center">
+
+### 🔐 Authentication Flow
+*Secure login and registration process*
+
+<table>
+<tr>
+<td width="50%">
+
+**Login Interface**
+
+![Login](./assets/images/screenshots/login.png)
+
+</td>
+<td width="50%">
+
+**Registration Process**
+
+![Sign Up](./assets/images/screenshots/sign-up.png)
+
+</td>
+</tr>
+</table>
+
+### 🏭 Producer Experience
+*Complete producer workflow and management*
+
+<table>
+<tr>
+<td width="33%">
+
+**Production Management**
+
+![Producer Production](./assets/images/screenshots/producer-production.png)
+
+</td>
+<td width="33%">
+
+**My Credits Overview**
+
+![Producer Credits](./assets/images/screenshots/producer-mycredits.png)
+
+</td>
+<td width="33%">
+
+**Analytics Dashboard**
+
+![Producer Analytics](./assets/images/screenshots/producer-analytics.png)
+
+</td>
+</tr>
+</table>
+
+### 🛡️ Certifier Experience
+*Verification and fraud detection tools*
+
+<table>
+<tr>
+<td width="33%">
+
+**Verification Requests**
+
+![Certifier Requests](./assets/images/screenshots/certifier-request.png)
+
+</td>
+<td width="33%">
+
+**Fraud Detection**
+
+![Fraud Detection](./assets/images/screenshots/certifier-frauddetection.png)
+
+</td>
+<td width="33%">
+
+**Analytics Dashboard**
+
+![Certifier Analytics](./assets/images/screenshots/certifier-analytics.png)
+
+</td>
+</tr>
+</table>
+
+### 💼 Buyer Experience
+*Marketplace, portfolio, and sustainability tracking*
+
+<table>
+<tr>
+<td width="25%">
+
+**Marketplace**
+
+![Buyer Marketplace](./assets/images/screenshots/buyer-marketplace.png)
+
+</td>
+<td width="25%">
+
+**Portfolio Management**
+
+![Buyer Portfolio](./assets/images/screenshots/buyer-portfolio.png)
+
+</td>
+<td width="25%">
+
+**Transaction History**
+
+![Buyer Transactions](./assets/images/screenshots/buyer-transactions.png)
+
+</td>
+<td width="25%">
+
+**Analytics Dashboard**
+
+![Buyer Analytics](./assets/images/screenshots/buyer-analytics.png)
+
+</td>
+</tr>
+</table>
+
+</div>
+
+---
+
+## 🌟 Overview
+
+HydroLink is a cutting-edge platform that addresses the critical need for transparency and trust in green hydrogen credit markets. By leveraging blockchain technology, AI-powered verification, and smart contracts, we create an immutable, verifiable ecosystem where producers can mint, certifiers can verify, and buyers can trade green hydrogen credits with complete confidence.
+
+### 🎯 Mission Statement
+
+To accelerate the global transition to sustainable energy by creating the world's most trusted and transparent green hydrogen credit trading platform, empowering producers, certifiers, and buyers to participate in a carbon-neutral future.
+
+### ✨ Key Highlights
+
+- 🔗 **Blockchain-Secured**: Immutable credit tracking on Polygon network with ERC-721 NFT standards
+- 🤖 **AI-Powered**: Advanced fraud detection and verification algorithms
+- 🏆 **Gamified Experience**: Leaderboards, achievements, and engagement rewards
+- ⚡ **Real-Time Processing**: Instant verification and trading capabilities
+- 🌐 **Multi-Stakeholder**: Unified platform for producers, certifiers, and buyers
+- 📱 **Modern UI/UX**: Responsive design with beautiful animations using Framer Motion
+- 🔒 **Enterprise Security**: Role-based access control and comprehensive audit trails
+
+---
+
+## 🏗️ System Architecture
+
+The HydroLink platform follows a modern, scalable architecture built on proven technologies:
+
+### 📁 Monorepo Structure
 
 ```
 HydroLink/
-├── 📁 client/                    # React frontend application
-│   ├── 📁 src/
-│   │   ├── 📁 components/        # Reusable UI components
-│   │   │   ├── Navbar.jsx        # Navigation header
-│   │   │   ├── Sidebar.jsx       # Role-based sidebar
-│   │   │   ├── Footer.jsx        # Site footer
-│   │   │   ├── DashboardCard.jsx # Statistics cards
-│   │   │   ├── Chart.jsx         # Data visualization
-│   │   │   └── 📁 dashboard/     # Dashboard-specific components
-│   │   ├── 📁 pages/            # Application pages
-│   │   │   ├── Landing.jsx       # Marketing landing page
-│   │   │   ├── Login.jsx         # Authentication
-│   │   │   ├── Register.jsx      # User registration
-│   │   │   ├── 📁 dashboard/     # Role-based dashboards
-│   │   │   │   ├── ProducerDashboard.jsx
-│   │   │   │   ├── CertifierDashboard.jsx
-│   │   │   │   └── BuyerDashboard.jsx
-│   │   │   ├── Credits.jsx       # Credit management
-│   │   │   ├── Marketplace.jsx   # Trading interface
-│   │   │   ├── Analytics.jsx     # Data insights
-│   │   │   └── Leaderboard.jsx   # Gamification
-│   │   ├── 📁 contexts/         # React context providers
-│   │   └── 📁 assets/           # Static resources
-│   ├── 📄 package.json          # Frontend dependencies
-│   └── 📄 vite.config.js        # Build configuration
-├── 📁 server/                   # Node.js backend API
-│   ├── 📁 src/
-│   │   ├── 📁 api/
-│   │   │   ├── 📁 controllers/   # Request handlers
-│   │   │   │   ├── auth.controller.js
-│   │   │   │   ├── producer.controller.js
-│   │   │   │   ├── certifier.controller.js
-│   │   │   │   └── buyer.controller.js
-│   │   │   ├── 📁 models/        # Database schemas
-│   │   │   │   ├── user.model.js
-│   │   │   │   ├── credit.model.js
-│   │   │   │   ├── transaction.model.js
-│   │   │   │   └── achievement.model.js
-│   │   │   ├── 📁 routes/        # API endpoints
-│   │   │   └── 📁 middlewares/   # Authentication & validation
-│   │   ├── 📁 services/         # Business logic
-│   │   │   └── blockchain.service.js
-│   │   ├── 📁 config/           # Configuration files
-│   │   └── 📁 utils/            # Helper functions
-│   ├── 📁 scripts/              # Database seeding
-│   └── 📄 package.json          # Backend dependencies
-├── 📁 blockchain/               # Smart contracts
-│   ├── 📁 contracts/
-│   │   └── GreenCredit.sol      # Main credit contract
-│   ├── 📁 scripts/
-│   │   └── deploy.js            # Deployment script
-│   ├── 📁 test/                 # Contract tests
-│   ├── 📄 hardhat.config.js     # Hardhat configuration
-│   └── 📄 package.json          # Blockchain dependencies
-├── 📁 docs/                     # Documentation & images
-│   ├── 📁 images/               # UI screenshots
-│   ├── 📁 api/                  # API documentation
-│   └── 📁 deployment/           # Deployment guides
-├── 📄 package.json              # Root package configuration
-├── 📄 vercel.json               # Deployment configuration
-└── 📄 README.md                 # This file
+├── 📱 client/              # React.js Frontend (Vite + TailwindCSS)
+│   ├── src/
+│   │   ├── components/     # Reusable UI Components
+│   │   ├── pages/          # Role-based Application Pages
+│   │   ├── contexts/       # React Context Providers (Auth, etc.)
+│   │   └── assets/         # Static Assets and Media
+│   └── public/             # Public Assets
+├── 🖥️  server/             # Node.js Backend API (Express.js)
+│   ├── src/
+│   │   ├── api/
+│   │   │   ├── controllers/    # Business Logic Controllers
+│   │   │   ├── models/         # MongoDB/Mongoose Models
+│   │   │   ├── routes/         # RESTful API Routes
+│   │   │   └── middlewares/    # Authentication & Validation
+│   │   ├── config/         # Database & Environment Config
+│   │   ├── services/       # Blockchain & External Services
+│   │   └── utils/          # Helper Functions & Utilities
+│   └── scripts/            # Database Seeds & Migration Scripts
+├── ⛓️  blockchain/         # Smart Contract Layer (Hardhat)
+│   ├── contracts/          # Solidity Smart Contracts
+│   ├── scripts/            # Deployment & Interaction Scripts
+│   ├── test/               # Contract Unit Tests
+│   └── artifacts/          # Compiled Contract ABIs
+└── 📚 docs/               # Project Documentation
+```
+
+### 🔄 Data Flow Architecture
+
+```
+Frontend (React) ↔ Backend API (Express) ↔ Database (MongoDB)
+                        ↕
+              Blockchain Layer (Polygon)
+                        ↕
+                Smart Contracts (ERC-721)
 ```
 
 ---
 
-## 🚀 Getting Started
+## ✨ Key Platform Features
+
+<div align="center">
+
+### 🔗 **Blockchain Integration**
+Secure, immutable credit tracking on Polygon network with ERC-721 NFT standards
+
+### 🤖 **AI-Powered Fraud Detection**
+Advanced machine learning algorithms for automated verification and risk assessment
+
+### 🏆 **Gamification System**  
+Leaderboards, achievement rewards, and engagement mechanics for all user types
+
+### 📱 **Mobile-First Design**
+Fully responsive design optimized for desktop, tablet, and mobile devices
+
+### ⚡ **Real-time Processing**
+Instant verification, notifications, and trading capabilities with live updates
+
+### 🔒 **Enterprise Security**
+Multi-layer authentication, role-based access control, and comprehensive audit trails
+
+</div>
+
+---
+
+## 🎭 User Roles & Capabilities
+
+### 🏭 **Producers** - Green Hydrogen Manufacturers
+- **Create Credits**: Submit production data for verification with comprehensive metadata
+- **Manage Facilities**: Track multiple production facilities and their output
+- **Monitor Status**: Real-time verification progress and status updates
+- **Analytics Dashboard**: Production insights, trends, and performance metrics
+- **Marketplace Integration**: Direct selling capabilities with automated pricing
+
+### 🛡️ **Certifiers** - Verification Authorities
+- **Review Submissions**: Validate production claims with detailed documentation
+- **AI-Assisted Verification**: Leverage fraud detection algorithms for accuracy
+- **Batch Processing**: Efficient review workflows for high-volume processing
+- **Compliance Tracking**: Ensure regulatory requirement adherence
+- **Audit Trails**: Maintain complete verification history and documentation
+
+### 💼 **Buyers** - Corporate & Individual Purchasers
+- **Browse Marketplace**: Discover available credits with detailed information
+- **Portfolio Management**: Track owned assets and their performance
+- **Retirement System**: Carbon offset functionality for sustainability goals
+- **Sustainability Reporting**: ESG compliance tools and automated reporting
+- **Investment Analytics**: Market trend analysis and ROI calculations
+
+---
+
+## 💻 Technology Stack
+
+### Frontend Technologies
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **React** | 19.1.1 | Component-based UI framework with hooks |
+| **Vite** | 7.1.2 | Fast build tool and development server |
+| **TailwindCSS** | 4.1.12 | Utility-first CSS framework for styling |
+| **Framer Motion** | 12.23.12 | Animation and gesture library |
+| **React Router** | 7.8.2 | Client-side routing and navigation |
+| **Recharts** | 3.1.2 | Data visualization and charting components |
+| **Lucide React** | 0.542.0 | Beautiful SVG icon library |
+
+### Backend Technologies
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Node.js** | 18.x | JavaScript runtime environment |
+| **Express.js** | 5.1.0 | Web application framework |
+| **MongoDB** | 8.18.0 | NoSQL database with Mongoose ODM |
+| **JWT** | 9.0.2 | Authentication and authorization tokens |
+| **bcryptjs** | 3.0.2 | Password hashing and security |
+| **Nodemailer** | 7.0.6 | Email service integration |
+
+### Blockchain Technologies
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Solidity** | 0.8.24 | Smart contract programming language |
+| **Hardhat** | 6.1.0 | Ethereum development environment |
+| **OpenZeppelin** | 5.4.0 | Secure smart contract library |
+| **Ethers.js** | 6.15.0 | Ethereum blockchain interaction library |
+| **Polygon** | Amoy Testnet | Layer 2 scaling solution for Ethereum |
+
+---
+
+## 🚀 Quick Start Guide
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
+Ensure you have the following installed:
+- **Node.js** (v18.0 or higher) - [Download here](https://nodejs.org/)
+- **npm** or **yarn** package manager
+- **Git** for version control
+- **MongoDB** (local installation or Atlas account)
+- **MetaMask** browser extension for Web3 interactions
 
-- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
-- **npm** or **yarn** - Package manager
-- **Git** - Version control
-- **MongoDB** - Database (local or Atlas)
-- **MetaMask** - Browser wallet for blockchain interactions
+### 🔧 Installation
 
-### Installation
-
-#### 1. Clone the Repository
+1. **Clone the Repository**
 ```bash
-git clone https://github.com/your-username/HydroLink.git
-cd HydroLink
+   git clone https://github.com/your-username/hydrolink.git
+   cd hydrolink/HydroLink
 ```
 
-#### 2. Install Dependencies
+2. **Install Dependencies**
 ```bash
 # Install root dependencies
 npm install
 
 # Install frontend dependencies
-cd client
-npm install
+   cd client && npm install && cd ..
 
 # Install backend dependencies
-cd ../server
-npm install
+   cd server && npm install && cd ..
 
 # Install blockchain dependencies
-cd ../blockchain
-npm install
+   cd blockchain && npm install && cd ..
 ```
 
-#### 3. Environment Setup
+3. **Environment Configuration**
+   
+   Create `.env` files in respective directories:
 
-**Frontend Environment** (`client/.env`):
+   **Server Environment** (`server/.env`):
 ```env
-VITE_API_URL=http://localhost:3000
-VITE_BLOCKCHAIN_RPC=https://rpc-mumbai.maticvigil.com
-VITE_CONTRACT_ADDRESS=0x...
-VITE_APP_NAME=HydroLink
-```
-
-**Backend Environment** (`server/.env`):
-```env
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/hydrolink
-JWT_SECRET=your-super-secret-jwt-key
+   # Database Configuration
+   MONGO_URI=mongodb://localhost:27017/hydrolink
+   # Alternative: MongoDB Atlas
+   # MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/hydrolink
+   
+   # JWT Configuration
+   JWT_SECRET=your_super_secure_jwt_secret_key_minimum_32_characters
 JWT_EXPIRE=30d
+   
+   # Blockchain Configuration
+   GREEN_CREDIT_CONTRACT_ADDRESS=0x...
+   CONTRACT_OWNER_PRIVATE_KEY=0x...
+   BLOCKCHAIN_RPC_URL=https://rpc-amoy.polygon.technology
+   
+   # Email Service Configuration (Optional)
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASS=your-app-password
+   
+   # Application Configuration
+   CLIENT_URL=http://localhost:5173
 NODE_ENV=development
-BLOCKCHAIN_RPC_URL=https://rpc-mumbai.maticvigil.com
-CONTRACT_ADDRESS=0x...
-PRIVATE_KEY=your-wallet-private-key
+   PORT=3001
 ```
 
 **Blockchain Environment** (`blockchain/.env`):
 ```env
-MUMBAI_RPC_URL=https://rpc-mumbai.maticvigil.com
-PRIVATE_KEY=your-wallet-private-key
-POLYGONSCAN_API_KEY=your-polygonscan-api-key
-```
+   # Network Configuration
+   POLYGON_AMOY_RPC_URL=https://rpc-amoy.polygon.technology
+   PRIVATE_KEY=your_private_key_without_0x_prefix
+   
+   # Explorer API Keys (for contract verification)
+   POLYGONSCAN_API_KEY=your_polygonscan_api_key
+   COINMARKETCAP_API_KEY=your_coinmarketcap_api_key
+   ```
 
-#### 4. Database Setup
+4. **Database Setup**
 ```bash
-# Start MongoDB service (if running locally)
+   # Start MongoDB (if using local installation)
 mongod
 
-# Or use MongoDB Atlas cloud service
-# Update MONGODB_URI in server/.env with your Atlas connection string
+   # Initialize database with sample data
+   cd server
+   npm run seed  # Creates sample users and test data
 ```
 
-#### 5. Smart Contract Deployment
+5. **Blockchain Setup**
 ```bash
 cd blockchain
+   
+   # Compile smart contracts
 npm run compile
-npm run deploy:mumbai
-```
+   
+   # Deploy to local hardhat network (for development)
+   npm run deploy:hardhat
+   
+   # Or deploy to Polygon Amoy testnet
+   npm run deploy:amoy
+   ```
 
-#### 6. Start Development Servers
-
-**Terminal 1 - Backend:**
+6. **Start Development Servers**
+   
+   Open **three terminal windows**:
+   
+   **Terminal 1 - Backend API:**
 ```bash
 cd server
 npm run dev
+   # 🖥️  Server runs on http://localhost:3001
 ```
 
-**Terminal 2 - Frontend:**
+   **Terminal 2 - Frontend Application:**
 ```bash
 cd client
 npm run dev
-```
+   # 📱 Client runs on http://localhost:5173
+   ```
+   
+   **Terminal 3 - Local Blockchain (Optional):**
+   ```bash
+   cd blockchain
+   npx hardhat node
+   # ⛓️  Local blockchain runs on http://localhost:8545
+   ```
 
-#### 7. Access the Application
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3000
-- **API Documentation**: http://localhost:3000/api/docs
+### 🌐 Access the Application
 
----
+Once all services are running:
 
-## 🧪 Testing
+- **🌐 Frontend**: http://localhost:5173
+- **🖥️ Backend API**: http://localhost:3001
+- **📚 API Documentation**: http://localhost:3001/api/docs (if enabled)
+- **⛓️ Local Blockchain**: http://localhost:8545 (if running)
 
-### Frontend Testing
-```bash
-cd client
-npm run test
-npm run test:coverage
-```
+### 🎮 First Steps
 
-### Backend Testing
-```bash
-cd server
-npm run test
-npm run test:integration
-```
-
-### Smart Contract Testing
-```bash
-cd blockchain
-npm run test
-npm run test:coverage
-```
+1. **Register an Account**: Visit the frontend and choose your role (Producer, Certifier, or Buyer)
+2. **Complete Profile**: Add company information, contact details, and preferences
+3. **Connect Wallet**: Link your MetaMask wallet for blockchain interactions
+4. **Explore Dashboard**: Familiarize yourself with role-specific features and navigation
+5. **Start Trading**: Create your first credit (Producer) or explore the marketplace (Buyer)
 
 ---
 
-## 📚 API Documentation
+## 🔄 Platform Workflow Showcase
+
+<div align="center">
+
+### 🏭 Producer Workflow
+*Step-by-step credit creation and production management*
+
+![Producer Workflow](./assets/images/screenshots/producer-production.png)
+
+### 🛡️ Verification Process  
+*AI-assisted certification workflow for certifiers*
+
+![Verification Process](./assets/images/screenshots/certifier-request.png)
+
+### 💰 Trading & Transactions
+*Seamless marketplace experience for buyers*
+
+![Trading Interface](./assets/images/screenshots/buyer-transactions.png)
+
+### 📊 Credit Lifecycle Process
+
+**1. Production** → **2. Submission** → **3. Verification** → **4. Certification** → **5. Trading** → **6. Retirement**
+
+*Complete transparency from hydrogen production to carbon offset retirement*
+
+</div>
+
+---
+
+## 🔗 API Reference
 
 ### Authentication Endpoints
 
-#### POST `/api/auth/register`
-Register a new user account.
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/auth/register` | Register new user account | ❌ |
+| POST | `/api/auth/login` | User authentication login | ❌ |
+| POST | `/api/auth/logout` | User session logout | ✅ |
+| GET | `/api/auth/me` | Get current user information | ✅ |
 
-**Request Body:**
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "securePassword123",
-  "role": "producer",
-  "companyName": "Green Energy Corp"
-}
-```
+### Producer Endpoints
 
-**Response:**
+| Method | Endpoint | Description | Role Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/producer/credits` | Request credit minting | Producer |
+| GET | `/api/producer/credits` | Get producer's credits | Producer |
+| GET | `/api/producer/dashboard` | Get dashboard statistics | Producer |
+| GET | `/api/producer/facilities` | Get production facilities | Producer |
+| POST | `/api/producer/facilities` | Create new facility | Producer |
+| GET | `/api/producer/sales/pending` | Get pending sale requests | Producer |
+| POST | `/api/producer/sales/:id/accept` | Accept sale request | Producer |
+
+### Certifier Endpoints
+
+| Method | Endpoint | Description | Role Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/certifier/requests/pending` | Get pending verification requests | Certifier |
+| POST | `/api/certifier/requests/:id/approve` | Approve credit request | Certifier |
+| POST | `/api/certifier/requests/:id/reject` | Reject credit request | Certifier |
+| GET | `/api/certifier/dashboard` | Get certifier dashboard stats | Certifier |
+
+### Buyer Endpoints
+
+| Method | Endpoint | Description | Role Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/buyer/credits/available` | Get marketplace credits | Buyer |
+| POST | `/api/buyer/credits/:id/purchase` | Purchase specific credit | Buyer |
+| GET | `/api/buyer/credits/purchased` | Get owned credits | Buyer |
+| POST | `/api/buyer/credits/:id/retire` | Retire credit for offset | Buyer |
+| GET | `/api/buyer/dashboard` | Get buyer dashboard stats | Buyer |
+
+### Blockchain Integration
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/blockchain/balance/:address` | Get wallet token balance | ✅ |
+
+### Sample API Responses
+
+**User Registration Response:**
 ```json
 {
   "success": true,
   "data": {
-    "user": { ... },
-    "token": "jwt-token-here"
-  }
+    "user": {
+      "id": "60f7b3b3b3b3b3b3b3b3b3b3",
+      "name": "John Doe",
+      "email": "john@greentech.com",
+      "role": "Producer",
+      "walletAddress": null,
+      "isVerified": false,
+      "profile": {
+        "company": "GreenTech Industries",
+        "description": "Leading green hydrogen producer"
+      }
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  },
+  "message": "User registered successfully"
 }
 ```
 
-#### POST `/api/auth/login`
-Authenticate user and receive JWT token.
-
-### Credit Management Endpoints
-
-#### GET `/api/credits`
-Retrieve all credits with filtering options.
-
-**Query Parameters:**
-- `status`: `pending`, `approved`, `retired`
-- `producer`: Producer ID
-- `limit`: Number of results (default: 10)
-- `page`: Page number (default: 1)
-
-#### POST `/api/credits/mint`
-Create a new hydrogen credit (Producer only).
-
-**Request Body:**
+**Available Credits Response:**
 ```json
 {
-  "hydrogenAmount": 1000,
-  "productionDate": "2024-01-15",
-  "facilityId": "facility-123",
-  "certificationStandard": "GH2-Standard",
-  "metadata": {
-    "productionMethod": "electrolysis",
-    "energySource": "solar"
-  }
+  "success": true,
+  "data": [
+    {
+      "creditId": "HC-202412-ABCDE-123456",
+      "energyAmountMWh": 100.5,
+      "energySource": "Solar",
+      "productionDate": "2024-12-01T00:00:00.000Z",
+      "facilityName": "Green Energy Plant #1",
+      "facilityLocation": "California, USA",
+      "status": "Certified",
+      "producer": {
+        "name": "GreenTech Industries",
+        "email": "contact@greentech.com",
+        "walletAddress": "0x..."
+      },
+      "certifier": {
+        "name": "Clean Energy Authority",
+        "email": "verify@cleanenergy.org"
+      },
+      "pricing": {
+        "currentMarketPrice": 45.99,
+        "currency": "USD"
+      },
+      "environmentalImpact": {
+        "co2Avoided": 75.3,
+        "waterUsed": 12.5,
+        "landUsed": 0.02
+      }
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 10,
+  "message": "Available credits retrieved successfully"
 }
 ```
 
-### Analytics Endpoints
+---
 
-#### GET `/api/analytics/overview`
-Get platform statistics and metrics.
+## 🔐 Security & Compliance
 
-#### GET `/api/analytics/leaderboard`
-Retrieve producer rankings and achievements.
+### Security Measures
+
+- **🔒 Multi-layer Authentication**: JWT tokens with role-based access control (RBAC)
+- **🛡️ Input Validation**: Comprehensive data sanitization using express-validator
+- **🔐 Password Security**: bcrypt hashing with configurable salt rounds
+- **🌐 CORS Protection**: Configured for secure cross-origin requests
+- **📝 Audit Trails**: Complete transaction and user action logging
+- **🚫 Rate Limiting**: API abuse prevention with configurable limits
+- **🔍 Data Encryption**: Sensitive data encryption at rest and in transit
+
+### Smart Contract Security
+
+- **✅ OpenZeppelin Standards**: Battle-tested ERC-721 contract libraries
+- **🔍 Static Analysis**: Automated vulnerability scanning with Slither
+- **🧪 Comprehensive Testing**: 100% test coverage for critical functions
+- **🔒 Access Controls**: Role-based function restrictions and modifiers
+- **⚠️ Emergency Stops**: Circuit breakers for critical security situations
+- **📋 Audit Trail**: Complete on-chain transaction history
+
+### Compliance Features
+
+- **📊 ESG Reporting**: Environmental, Social, and Governance tracking
+- **📋 Audit Export**: Complete transaction history export in multiple formats
+- **🏷️ Metadata Standards**: ISO-compliant credit information storage
+- **🔍 Transparency**: Public verification of all certified credits
+- **📈 Carbon Accounting**: Accurate emission offset calculations and reporting
 
 ---
 
-## 🔧 Configuration
-
-### Frontend Configuration
-
-The frontend uses Vite for fast development and building. Key configuration files:
-
-- `vite.config.js` - Build configuration
-- `tailwind.config.js` - Styling framework
-- `eslint.config.js` - Code linting rules
-
-### Backend Configuration
-
-The backend is built with Express.js and includes:
-
-- **CORS** - Cross-origin resource sharing
-- **Rate Limiting** - API request throttling  
-- **Input Validation** - Request data sanitization
-- **JWT Authentication** - Secure token-based auth
-- **Error Handling** - Centralized error management
-
-### Smart Contract Configuration
-
-The blockchain layer uses Hardhat for development:
-
-- **Network Configuration** - Mumbai testnet setup
-- **Gas Optimization** - Efficient contract deployment
-- **Security Auditing** - OpenZeppelin integration
-- **Testing Framework** - Comprehensive test suite
-
----
-
-## 🌐 Deployment
+## 🚀 Deployment Guide
 
 ### Frontend Deployment (Vercel)
 
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables in Vercel dashboard
-3. Deploy with automatic builds on commit
+1. **Connect Repository to Vercel**
+   ```bash
+   # Install Vercel CLI
+   npm i -g vercel
+   
+   # Login to Vercel
+   vercel login
+   
+   # Deploy from client directory
+   cd client
+   vercel --prod
+   ```
 
+2. **Configure Environment Variables in Vercel Dashboard**
+   ```env
+   VITE_API_URL=https://your-api-domain.herokuapp.com
+   VITE_BLOCKCHAIN_NETWORK=polygon
+   ```
+
+3. **Build Configuration** (vercel.json)
+   ```json
+   {
+     "builds": [
+       {
+         "src": "package.json",
+         "use": "@vercel/static-build",
+         "config": {
+           "distDir": "dist"
+         }
+       }
+     ],
+     "routes": [
+       {
+         "src": "/(.*)",
+         "dest": "/index.html"
+       }
+     ]
+   }
+   ```
+
+### Backend Deployment Options
+
+#### Option 1: Heroku
 ```bash
-# Manual deployment
-cd client
-npm run build
-vercel --prod
+# Install Heroku CLI and deploy
+heroku create hydrolink-api
+heroku config:set NODE_ENV=production
+heroku config:set MONGO_URI=your_mongodb_atlas_uri
+git subtree push --prefix server heroku main
 ```
 
-### Backend Deployment (Railway/Render)
+#### Option 2: Railway
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
 
-1. Create a new service on Railway or Render
-2. Connect your GitHub repository
-3. Set environment variables
-4. Deploy with automatic builds
+# Login and deploy
+railway login
+railway deploy
+```
 
 ### Smart Contract Deployment
 
+**Deploy to Polygon Amoy Testnet:**
 ```bash
 cd blockchain
-npm run deploy:mumbai
-npm run verify
+npm run deploy:amoy
 ```
 
-### Environment-Specific Configurations
-
-#### Production Environment
-- Use MongoDB Atlas for database
-- Configure CDN for static assets
-- Enable SSL/TLS certificates
-- Set up monitoring and logging
-
-#### Staging Environment
-- Use testnet for blockchain interactions
-- Enable debug logging
-- Configure CI/CD pipelines
-
----
-
-## 🔐 Security
-
-### Authentication & Authorization
-- **JWT Tokens** - Secure, stateless authentication
-- **Role-Based Access** - Granular permission system
-- **Password Hashing** - bcrypt with salt rounds
-- **Session Management** - Secure token refresh
-
-### API Security
-- **Input Validation** - Comprehensive request sanitization
-- **Rate Limiting** - DDoS protection
-- **CORS Configuration** - Cross-origin security
-- **SQL Injection Prevention** - Parameterized queries
-
-### Smart Contract Security
-- **OpenZeppelin Libraries** - Battle-tested security patterns
-- **Access Control** - Role-based contract permissions
-- **Reentrancy Protection** - Guard against attacks
-- **Gas Optimization** - Efficient contract execution
-
-### Data Protection
-- **Encryption** - Sensitive data encryption at rest
-- **HTTPS** - SSL/TLS for data in transit
-- **Privacy Controls** - GDPR compliance features
-- **Audit Logging** - Comprehensive activity tracking
+**Verify Contract on Explorer:**
+```bash
+npx hardhat verify --network amoy DEPLOYED_CONTRACT_ADDRESS
+```
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Here's how you can help:
+We welcome contributions from the community! Here's how you can get involved:
 
-### Getting Started
-1. **Fork** the repository
-2. **Clone** your fork locally
-3. **Create** a feature branch
-4. **Make** your changes
-5. **Test** thoroughly
-6. **Submit** a pull request
+### 🛠️ Development Process
 
-### Development Guidelines
+1. **Fork & Clone**
+   ```bash
+   git clone https://github.com/your-username/hydrolink.git
+   cd hydrolink
+   ```
 
-#### Code Style
-- Follow ESLint configuration
-- Use Prettier for formatting
-- Write descriptive commit messages
-- Include tests for new features
+2. **Create Feature Branch**
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
 
-#### Pull Request Process
-1. Update documentation as needed
-2. Add tests for new functionality
-3. Ensure all tests pass
-4. Update CHANGELOG.md
-5. Request code review
+3. **Make Changes & Test**
+   ```bash
+   # Run tests
+   npm run test
+   
+   # Check linting
+   npm run lint
+   ```
 
-#### Feature Requests
-- Open an issue with detailed description
-- Discuss implementation approach
-- Get approval before starting work
+4. **Commit & Push**
+   ```bash
+   git commit -m "feat: add amazing feature"
+   git push origin feature/amazing-feature
+   ```
 
-#### Bug Reports
-- Use the bug report template
-- Include reproduction steps
-- Provide environment details
-- Add relevant screenshots
+5. **Open Pull Request**
+   - Describe your changes clearly
+   - Link related issues
+   - Request appropriate reviews
 
-### Community Guidelines
-- Be respectful and inclusive
-- Help others learn and grow
-- Share knowledge and resources
-- Follow our Code of Conduct
+### 📋 Code Standards
 
----
-
-## 📊 Performance & Analytics
-
-### Performance Metrics
-- **Load Time**: < 2 seconds initial page load
-- **Bundle Size**: Optimized for fast delivery
-- **Core Web Vitals**: Excellent Lighthouse scores
-- **API Response**: < 200ms average response time
-
-### Analytics Integration
-- **User Behavior Tracking** - Anonymized usage analytics
-- **Performance Monitoring** - Real-time error tracking
-- **Business Metrics** - Credit transaction analytics
-- **Environmental Impact** - Carbon offset calculations
+- **Frontend**: Follow React best practices, use TypeScript where possible
+- **Backend**: RESTful API design, comprehensive error handling
+- **Smart Contracts**: Solidity style guide, NatSpec documentation
+- **Testing**: Maintain >85% code coverage
 
 ---
 
-## 🌱 Sustainability Impact
+## 📚 Additional Resources
 
-### Environmental Benefits
-- **Carbon Reduction**: Track verified green hydrogen credits
-- **Transparency**: Immutable records of environmental impact
-- **Incentivization**: Gamified approach to sustainability
-- **Scale**: Platform enables market growth for clean energy
-
-### Social Impact
-- **Job Creation**: Supporting green hydrogen industry growth
-- **Education**: Raising awareness about clean energy
-- **Accessibility**: Making carbon markets more accessible
-- **Innovation**: Driving technological advancement
+- **📖 [Smart Contract Documentation](./blockchain/README.md)** - Contract specifications and deployment
+- **🔧 [API Documentation](./docs/api.md)** - Complete endpoint reference
+- **👤 [User Guide](./docs/user-guide.md)** - Platform usage instructions
+- **🛠️ [Developer Guide](./docs/developer-guide.md)** - Development best practices
 
 ---
 
-## 📝 License
+## 🗺️ Roadmap
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### ✅ Phase 1: Foundation (Q4 2024)
+- [x] Core platform development
+- [x] Smart contract implementation
+- [x] User authentication & authorization
+- [x] Credit minting & verification system
+- [x] Basic marketplace functionality
 
-### Third-Party Licenses
-- React - MIT License
-- TailwindCSS - MIT License
-- OpenZeppelin Contracts - MIT License
-- MongoDB - Server Side Public License
+### 🔄 Phase 2: Enhancement (Q1 2025)
+- [x] AI fraud detection system
+- [x] Advanced analytics dashboard
+- [x] Mobile responsiveness
+- [ ] Multi-language support
+- [ ] Push notification system
+
+### 🚀 Phase 3: Scaling (Q2 2025)
+- [ ] Multi-chain support (Ethereum, BSC)
+- [ ] Automated market making
+- [ ] Enterprise API integrations
+- [ ] Advanced reporting tools
+- [ ] Regulatory compliance features
+
+---
+
+## 🙋‍♂️ Support & Community
+
+### 💬 Get Help
+
+- **📧 Email**: [support@hydrolink.com](mailto:support@hydrolink.com)
+- **🐛 Issues**: [GitHub Issues](https://github.com/your-username/hydrolink/issues)
+- **💬 Discussions**: [GitHub Discussions](https://github.com/your-username/hydrolink/discussions)
+
+### 🌐 Connect With Us
+
+- **🐦 Twitter**: [@HydroLinkPlatform](https://twitter.com/HydroLinkPlatform)
+- **💼 LinkedIn**: [HydroLink](https://linkedin.com/company/hydrolink)
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
-### Special Thanks
-- **OpenZeppelin** - For secure smart contract libraries
-- **React Team** - For the amazing frontend framework
-- **TailwindCSS** - For the utility-first CSS framework
-- **MongoDB** - For the flexible document database
-- **Vercel** - For seamless deployment platform
-
-### Inspiration
-- **United Nations SDGs** - Sustainable Development Goals
-- **Paris Agreement** - Climate action commitments
-- **Clean Energy Community** - For driving innovation
-- **Blockchain Community** - For decentralized solutions
-
-### Design Credits
-- **Icons**: Lucide React icon library
-- **Animations**: Framer Motion
-- **Charts**: Recharts library
-- **UI Inspiration**: Modern sustainability platforms
+- **🔗 OpenZeppelin** - Secure smart contract libraries
+- **⚛️ React Team** - Amazing frontend framework
+- **🟢 MongoDB** - Reliable database solutions
+- **🔷 Polygon** - Affordable blockchain infrastructure
+- **☁️ Vercel** - Seamless deployment platform
 
 ---
 
-## 📞 Support
+## 📷 Image Assets Guide
 
-### Getting Help
-- **Documentation**: Check this README and docs/ folder
-- **Issues**: Open a GitHub issue for bugs or features
-- **Discussions**: Join our GitHub Discussions
-- **Email**: contact@hydrolink.dev
+### 🎯 How to Add Screenshots
 
-### Community
-- **Discord**: [Join our community](https://discord.gg/hydrolink)
-- **Twitter**: [@HydroLinkDev](https://twitter.com/hydrolinkdev)
-- **LinkedIn**: [HydroLink Company Page](https://linkedin.com/company/hydrolink)
+To complete the visual documentation, please add the following screenshots to their respective directories:
+
+#### 📱 Screenshots (`./assets/images/screenshots/`)
+- `landing-page.png` - Main landing page with hero section
+- `producer-dashboard.png` - Producer dashboard with analytics
+- `certifier-dashboard.png` - Certifier verification interface
+- `buyer-dashboard.png` - Buyer portfolio and marketplace
+- `marketplace.png` - Credit marketplace grid view
+- `analytics.png` - Analytics and reporting dashboard
+- `producer-workflow.png` - Step-by-step credit creation
+- `verification-process.png` - AI-assisted verification flow
+- `trading-interface.png` - Buy/sell trading interface
+
+#### 🎨 Feature Images (`./assets/images/features/`)
+- `blockchain-integration.png` - Blockchain connection visual
+- `ai-fraud-detection.png` - AI fraud detection interface
+- `gamification.png` - Leaderboards and achievements
+- `mobile-responsive.png` - Mobile device screenshots
+- `real-time.png` - Real-time processing indicators
+
+#### 📊 Diagrams (`./assets/images/diagrams/`)
+- `system-architecture.png` - Overall system architecture
+- `blockchain-flow.png` - Smart contract interaction flow
+- `security-model.png` - Security layers diagram
+- `credit-lifecycle.png` - Complete credit journey flow
+
+#### 🎨 Logos (`./assets/images/logos/`)
+- `hydrolink-logo.png` - Main HydroLink logo
+- `hydrolink-icon.png` - Favicon/icon version
+
+### ✅ Current Status
+- **Screenshots**: ✅ All major platform screenshots captured and integrated
+- **Feature Images**: 🔄 To be added in future updates
+- **Diagrams**: 🔄 Architecture diagrams planned for next release
+- **Logos**: 🔄 Brand assets in development
+
+### 📐 Image Specifications
+- **Screenshots**: 1920x1080px (Full HD) - ✅ **COMPLETE**
+- **Feature Images**: 800x600px - 🔄 Planned
+- **Diagrams**: 1200x800px - 🔄 Planned
+- **Logos**: 512x512px (PNG with transparency) - 🔄 Planned
+
+### 🎨 Style Guidelines
+- **Color Scheme**: Green (#10b981), Blue (#3b82f6), Purple (#9f7aea)
+- **Design**: Clean, modern UI with subtle shadows
+- **Quality**: High-resolution, web-optimized files
+- **Accessibility**: High contrast for readability
 
 ---
 
-<p align="center">
-  <strong>Built with ❤️ for a sustainable future 🌱</strong>
-</p>
-
-<p align="center">
-  <sub>HydroLink - Accelerating the green hydrogen economy through blockchain technology</sub>
-</p>
+<div align="center">
+  
+  ### 🌱 Building a Sustainable Future, One Credit at a Time
+  
+  **Made with ❤️ by the HydroLink Team**
+  
+  [⭐ Star us on GitHub](https://github.com/your-username/hydrolink) | [🍴 Fork the project](https://github.com/your-username/hydrolink/fork)
+  
+  ---
+  
+  <small>**Last Updated**: December 2024 | **Version**: 1.0.0 | **Status**: Active Development</small>
+  
+</div>
