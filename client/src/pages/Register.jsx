@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Loader2, Leaf, Zap, Shield, Users } from 'lucide-react';
+import { config } from '../config/env';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ const Register = () => {
         walletAddress: formData.walletAddress || null
       };
 
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(config.getApiUrl('/auth/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

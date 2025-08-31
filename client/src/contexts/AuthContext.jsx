@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { config } from '../config/env';
 
 // Cookie helper functions
 const setCookie = (name, value, days = 7) => {
@@ -43,7 +44,7 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
           
           // Verify with backend
-          const response = await fetch('/api/auth/me', {
+          const response = await fetch(config.getApiUrl('/auth/me'), {
             credentials: 'include'
           });
           
@@ -70,7 +71,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', {
+      await fetch(config.getApiUrl('/auth/logout'), {
         method: 'POST',
         credentials: 'include'
       });
