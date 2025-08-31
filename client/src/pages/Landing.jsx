@@ -401,7 +401,7 @@ const Landing = () => {
                 />
 
                 <motion.div
-                  className="relative bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-green-100 hover:shadow-3xl transition-all duration-500"
+                  className="relative bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 hover:shadow-3xl transition-all duration-500"
                   style={{
                     background:
                       "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)",

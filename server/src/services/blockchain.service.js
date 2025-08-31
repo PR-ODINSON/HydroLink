@@ -47,21 +47,24 @@ function isBlockchainConfigured() {
  * Mint a new GreenCredit NFT to a producer.
  * @param {string} producerWalletAddress - The wallet address of the producer.
  * @param {string} metadataUri - The metadata URI for the NFT.
- * @returns {Promise<{ success: boolean, txHash: string, tokenId: string }>}
+ * @param {number} mwhSoldOrBought - The amount of MWh sold or bought.
+ * @returns {Promise<{ success: boolean, txHash: string, tokenId: string, hydroCoinCredit: number }>}
  */
-async function mintCredit(producerWalletAddress, metadataUri) {
+async function mintCredit(producerWalletAddress, metadataUri, mwhSoldOrBought) {
   try {
     if (!isBlockchainConfigured()) {
       // Mock response for development
       const mockTokenId = Math.floor(Math.random() * 1000000).toString();
       const mockTxHash = '0x' + Array(64).fill().map(() => Math.floor(Math.random() * 16).toString(16)).join('');
-      
-      console.log('Mock minting credit:', { producerWalletAddress, metadataUri, tokenId: mockTokenId });
-      
+      const hydroCoinCredit = mwhSoldOrBought * 0.01; // Calculate HydroCoin credits
+
+      console.log('Mock minting credit:', { producerWalletAddress, metadataUri, tokenId: mockTokenId, hydroCoinCredit });
+
       return {
         success: true,
         txHash: mockTxHash,
         tokenId: mockTokenId,
+        hydroCoinCredit,
       };
     }
 
@@ -80,11 +83,13 @@ async function mintCredit(producerWalletAddress, metadataUri) {
       .find(e => e && e.name === 'Transfer');
 
     const tokenId = transferEvent ? transferEvent.args.tokenId.toString() : null;
+    const hydroCoinCredit = mwhSoldOrBought * 0.01; // Calculate HydroCoin credits
 
     return {
       success: true,
       txHash: receipt.hash,
       tokenId,
+      hydroCoinCredit,
     };
   } catch (error) {
     console.error('Minting failed:', error);
@@ -261,20 +266,22 @@ async function getBalance(ownerAddress) {
     if (!isBlockchainConfigured()) {
       // Mock response for development
       const mockBalance = Math.floor(Math.random() * 50);
-      
-      console.log('Mock getting balance:', { ownerAddress, balance: mockBalance });
-      
+      const hydroCoinBalance = mockBalance * 0.01; // Convert MWh to HydroCoin
+
+      console.log('Mock getting balance:', { ownerAddress, balance: mockBalance, hydroCoinBalance });
+
       return {
         success: true,
-        balance: mockBalance,
+        balance: hydroCoinBalance,
       };
     }
 
     const balance = await contract.balanceOf(ownerAddress);
-    
+    const hydroCoinBalance = parseInt(balance.toString()) * 0.01; // Convert MWh to HydroCoin
+
     return {
       success: true,
-      balance: parseInt(balance.toString()),
+      balance: hydroCoinBalance,
     };
   } catch (error) {
     console.error('Getting balance failed:', error);

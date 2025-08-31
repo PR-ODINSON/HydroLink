@@ -9,7 +9,8 @@ const {
   getRetiredCredits,
   getNotifications,
   markNotificationRead,
-  markAllNotificationsRead
+  markAllNotificationsRead,
+  getWalletData
 } = require('../controllers/buyer.controller');
 
 const router = express.Router();
@@ -31,5 +32,8 @@ router.get('/credits/retired', getRetiredCredits);
 router.get('/notifications', getNotifications);
 router.patch('/notifications/:id/read', markNotificationRead);
 router.patch('/notifications/read-all', markAllNotificationsRead);
+
+// Wallet route
+router.get('/wallet', getWalletData);
 
 module.exports = router;
