@@ -15,6 +15,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import ViewCredit from '../components/viewCredit';
 
 const Credits = () => {
   const { user } = useAuth();
@@ -23,6 +24,8 @@ const Credits = () => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
+  const [selectedCredit, setSelectedCredit] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchCredits = async () => {
@@ -112,6 +115,16 @@ const Credits = () => {
     });
   };
 
+  const handleViewCredit = (credit) => {
+    setSelectedCredit(credit);
+    setIsViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedCredit(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 flex items-center justify-center">
@@ -127,10 +140,8 @@ const Credits = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8"
+        <div
+          className="animate-scale-in flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8"
         >
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -145,14 +156,12 @@ const Credits = () => {
                'Browse and purchase verified green energy credits'}
             </p>
           </div>
-        </motion.div>
+        </div>
 
         {/* Error State */}
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8"
+          <div
+            className="animate-scale-in bg-red-50 border border-red-200 rounded-xl p-6 mb-8"
           >
             <div className="flex items-center gap-3">
               <AlertCircle className="w-6 h-6 text-red-600" />
@@ -161,14 +170,12 @@ const Credits = () => {
                 <p className="text-red-700">{error}</p>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Filters and Search */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 mb-8"
+        <div
+          className="animate-slide-in-up bg-white rounded-2xl shadow-xl border border-gray-200 p-6 mb-8"
         >
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
@@ -201,16 +208,14 @@ const Credits = () => {
               </select>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Credits Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCredits.length === 0 ? (
             <div className="col-span-full">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center bg-white rounded-2xl shadow-xl border border-gray-200 p-12"
+              <div
+                className="animate-scale-in text-center bg-white rounded-2xl shadow-xl border border-gray-200 p-12"
               >
                 <CreditCard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No Credits Found</h3>
@@ -219,7 +224,7 @@ const Credits = () => {
                     ? 'No credits match your current filters.' 
                     : 'You don\'t have any credits yet.'}
                 </p>
-              </motion.div>
+              </div>
             </div>
           ) : (
             filteredCredits.map((credit, index) => {
@@ -227,12 +232,9 @@ const Credits = () => {
               const StatusIcon = statusInfo.icon;
               
               return (
-                <motion.div
+                <div
                   key={credit._id || index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 hover:shadow-2xl transition-shadow"
+                  className="credit-card bg-white rounded-2xl shadow-xl border border-gray-200 p-6 hover:shadow-2xl transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -281,7 +283,10 @@ const Credits = () => {
                   </div>
                   
                   <div className="mt-6 flex gap-2">
-                    <button className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+                    <button 
+                      onClick={() => handleViewCredit(credit)}
+                      className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                    >
                       <Eye className="w-4 h-4" />
                       View
                     </button>
@@ -298,12 +303,20 @@ const Credits = () => {
                       </button>
                     )}
                   </div>
-                </motion.div>
+                </div>
               );
             })
           )}
         </div>
       </div>
+
+      {selectedCredit && (
+        <ViewCredit
+          credit={selectedCredit}
+          isOpen={isViewModalOpen}
+          onClose={closeViewModal}
+        />
+      )}
     </div>
   );
 };

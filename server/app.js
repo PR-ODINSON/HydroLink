@@ -12,6 +12,7 @@ const producerRoutes = require('./src/api/routes/producer.routes');
 const certifierRoutes = require('./src/api/routes/certifier.routes');
 const buyerRoutes = require('./src/api/routes/buyer.routes');
 const notificationRoutes = require('./src/api/routes/notification.routes');
+const blockchainRoutes = require('./src/api/routes/blockchain.routes');
 
 // Initialize express app
 const app = express();
@@ -37,6 +38,7 @@ app.use('/api/producer', producerRoutes);
 app.use('/api/certifier', certifierRoutes);
 app.use('/api/buyer', buyerRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/blockchain', blockchainRoutes);
 
 // Simple root route for health check
 app.get('/', (req, res) => {

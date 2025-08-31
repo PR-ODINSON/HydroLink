@@ -1,0 +1,491 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  X, 
+  CheckCircle, 
+  Zap, 
+  Factory, 
+  Calendar, 
+  MapPin, 
+  TrendingUp, 
+  Leaf,
+  Star,
+  Award,
+  ExternalLink,
+  Download
+} from 'lucide-react';
+
+// PDF generation function
+const generatePDF = (credit) => {
+  // Dynamic import for jspdf to avoid build issues
+  import('jspdf').then(({ default: jsPDF }) => {
+    const doc = new jsPDF();
+    
+    // Set document properties
+    doc.setProperties({
+      title: 'Green Hydrogen Credit Certificate',
+      subject: 'Environmental Credit Certificate',
+      author: 'HydroLink',
+      creator: 'HydroLink Platform'
+    });
+
+    // Add header
+    doc.setFontSize(24);
+    doc.setTextColor(34, 139, 34); // Green color
+    doc.text('Green Hydrogen Credit Certificate', 105, 30, { align: 'center' });
+    
+    // Add subtitle
+    doc.setFontSize(14);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Successfully minted on the blockchain', 105, 45, { align: 'center' });
+    
+    // Add credit details
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    
+    let yPosition = 70;
+    
+    // Credit ID
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Credit ID:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(credit.creditId || 'N/A', 80, yPosition);
+    yPosition += 15;
+    
+    // Energy Production
+    doc.setFont(undefined, 'bold');
+    doc.text('Energy Production:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(`${credit.energyAmountMWh} MWh`, 80, yPosition);
+    yPosition += 15;
+    
+    // Facility
+    doc.setFont(undefined, 'bold');
+    doc.text('Facility:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(credit.facilityName || 'N/A', 80, yPosition);
+    yPosition += 15;
+    
+    // Production Date
+    doc.setFont(undefined, 'bold');
+    doc.text('Production Date:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(credit.productionDate ? new Date(credit.productionDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }) : 'N/A', 80, yPosition);
+    yPosition += 15;
+    
+    // Energy Source
+    doc.setFont(undefined, 'bold');
+    doc.text('Energy Source:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(credit.energySource || 'N/A', 80, yPosition);
+    yPosition += 15;
+    
+    // Status
+    doc.setFont(undefined, 'bold');
+    doc.text('Status:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(credit.status || 'N/A', 80, yPosition);
+    yPosition += 15;
+    
+    // Location
+    if (credit.facilityLocation) {
+      doc.setFont(undefined, 'bold');
+      doc.text('Location:', 20, yPosition);
+      doc.setFont(undefined, 'normal');
+      doc.text(credit.facilityLocation, 80, yPosition);
+      yPosition += 15;
+    }
+    
+    // Environmental Impact
+    if (credit.environmentalImpact) {
+      yPosition += 10;
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(34, 139, 34);
+      doc.text('Environmental Impact', 20, yPosition);
+      yPosition += 15;
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      
+      if (credit.environmentalImpact.co2Avoided) {
+        doc.setFont(undefined, 'bold');
+        doc.text('CO₂ Avoided:', 20, yPosition);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${credit.environmentalImpact.co2Avoided.toFixed(1)} Tons`, 80, yPosition);
+        yPosition += 15;
+      }
+      
+      if (credit.environmentalImpact.waterUsagePerMWh) {
+        doc.setFont(undefined, 'bold');
+        doc.text('Water Usage:', 20, yPosition);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${credit.environmentalImpact.waterUsagePerMWh.toFixed(1)} L/MWh`, 80, yPosition);
+        yPosition += 15;
+      }
+      
+      if (credit.environmentalImpact.landAreaHectares) {
+        doc.setFont(undefined, 'bold');
+        doc.text('Land Area:', 20, yPosition);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${credit.environmentalImpact.landAreaHectares.toFixed(1)} Hectares`, 80, yPosition);
+        yPosition += 15;
+      }
+    }
+    
+    // Blockchain Info
+    yPosition += 10;
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('Blockchain Information', 20, yPosition);
+    yPosition += 15;
+    
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('Token ID:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(credit.tokenId || 'Pending', 80, yPosition);
+    yPosition += 15;
+    
+    doc.setFont(undefined, 'bold');
+    doc.text('Blockchain:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text('Ethereum', 80, yPosition);
+    yPosition += 15;
+    
+    // Footer
+    yPosition += 20;
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Generated by HydroLink Platform', 105, yPosition, { align: 'center' });
+    doc.text(`Generated on: ${new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`, 105, yPosition + 10, { align: 'center' });
+    
+    // Save the PDF
+    const fileName = `green-hydrogen-credit-${credit.creditId || 'certificate'}-${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+  }).catch(error => {
+    console.error('Error generating PDF:', error);
+    alert('Error generating PDF. Please try again.');
+  });
+};
+
+const ViewCredit = ({ credit, isOpen, onClose }) => {
+  const [isRotating, setIsRotating] = useState(true);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsRotating(true);
+      // Stop rotation after 3 seconds
+      const timer = setTimeout(() => setIsRotating(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!isOpen || !credit) return null;
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'certified': return 'text-green-600';
+      case 'pending': return 'text-yellow-600';
+      case 'rejected': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const handleDownloadCertificate = () => {
+    generatePDF(credit);
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.8, y: 50 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.8, y: 50 }}
+          className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="relative p-8 bg-gradient-to-br from-green-50 to-blue-50 rounded-t-3xl">
+            <button
+              onClick={onClose}
+              className="absolute top-6 right-6 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+            >
+              <X className="w-6 h-6 text-gray-600" />
+            </button>
+            
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Green Hydrogen Credit</h2>
+              <p className="text-gray-600">Successfully minted on the blockchain</p>
+            </div>
+          </div>
+
+          <div className="p-8">
+            {/* Rotating Token Section */}
+            <div className="flex justify-center mb-8">
+              <div className="relative">
+                {/* Token/Coin */}
+                <motion.div
+                  animate={{ 
+                    rotateY: isRotating ? 360 : 0,
+                    scale: isRotating ? [1, 1.1, 1] : 1
+                  }}
+                  transition={{ 
+                    rotateY: { duration: 2, repeat: isRotating ? Infinity : 0, ease: "linear" },
+                    scale: { duration: 0.5, repeat: isRotating ? Infinity : 0 }
+                  }}
+                  className="w-32 h-32 bg-gradient-to-br from-green-400 via-blue-500 to-emerald-600 rounded-full shadow-2xl flex items-center justify-center relative overflow-hidden"
+                >
+                  {/* Token Inner Design */}
+                  <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center">
+                    <div className="w-16 h-16 bg-white/30 rounded-full flex items-center justify-center">
+                      {/* <Leaf className="w-8 h-8 text-white" /> */}
+                      <span className='text-white font-extrabold text-4xl'>H</span>
+                    </div>
+                  </div>
+                  
+                  {/* Shine Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/30 to-transparent transform -skew-x-12" />
+                  
+                  {/* Status Badge */}
+                  <div className="absolute -top-2 -right-2">
+                    <div className="bg-green-500 text-white rounded-full p-2 shadow-lg">
+                      <CheckCircle className="w-4 h-4" />
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Floating Elements */}
+                <motion.div
+                  animate={{ 
+                    y: [0, -10, 0],
+                    rotate: [0, 5, 0]
+                  }}
+                  transition={{ 
+                    duration: 2, 
+                    repeat: Infinity, 
+                    ease: "easeInOut" 
+                  }}
+                  className="absolute -top-4 -left-4 text-green-500"
+                >
+                  <Star className="w-6 h-6" />
+                </motion.div>
+                
+                <motion.div
+                  animate={{ 
+                    y: [0, 10, 0],
+                    rotate: [0, -5, 0]
+                  }}
+                  transition={{ 
+                    duration: 2.5, 
+                    repeat: Infinity, 
+                    ease: "easeInOut",
+                    delay: 0.5
+                  }}
+                  className="absolute -bottom-4 -right-4 text-blue-500"
+                >
+                  <Award className="w-6 h-6" />
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Credit Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Left Column */}
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Zap className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Energy Production</h3>
+                      <p className="text-2xl font-bold text-blue-600">{credit.energyAmountMWh} MWh</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">Clean energy generated and verified</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Factory className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Facility</h3>
+                      <p className="text-lg font-medium text-gray-900">{credit.facilityName}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">Production facility location</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Calendar className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Production Date</h3>
+                      <p className="text-lg font-medium text-gray-900">{formatDate(credit.productionDate)}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">When the energy was produced</p>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                      <Leaf className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Energy Source</h3>
+                      <p className="text-lg font-medium text-gray-900">{credit.energySource}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">Renewable energy source type</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <TrendingUp className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Status</h3>
+                      <p className={`text-lg font-medium ${getStatusColor(credit.status)}`}>
+                        {credit.status}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">Current credit status</p>
+                </div>
+
+                {credit.facilityLocation && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-red-100 rounded-lg">
+                        <MapPin className="w-5 h-5 text-red-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Location</h3>
+                        <p className="text-lg font-medium text-gray-900">{credit.facilityLocation}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600">Facility geographical location</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Environmental Impact */}
+            {credit.environmentalImpact && (
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Leaf className="w-6 h-6 text-green-600" />
+                  Environmental Impact
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {credit.environmentalImpact.co2Avoided && (
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600">
+                        {credit.environmentalImpact.co2Avoided.toFixed(1)}
+                      </p>
+                      <p className="text-sm text-gray-600">Tons CO₂ Avoided</p>
+                    </div>
+                  )}
+                  {credit.environmentalImpact.waterUsagePerMWh && (
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-blue-600">
+                        {credit.environmentalImpact.waterUsagePerMWh.toFixed(1)}
+                      </p>
+                      <p className="text-sm text-gray-600">Liters/MWh</p>
+                    </div>
+                  )}
+                  {credit.environmentalImpact.landAreaHectares && (
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-emerald-600">
+                        {credit.environmentalImpact.landAreaHectares.toFixed(1)}
+                      </p>
+                      <p className="text-sm text-gray-600">Hectares</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Blockchain Info */}
+            <div className="bg-gray-900 text-white rounded-xl p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                Blockchain Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-400">Credit ID</p>
+                  <p className="font-mono text-green-400">{credit.creditId || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Token ID</p>
+                  <p className="font-mono text-green-400">{credit.tokenId || 'Pending'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Blockchain</p>
+                  <p className="text-green-400">Ethereum</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Smart Contract</p>
+                  <p className="font-mono text-green-400">0x1234...5678</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 mt-8">
+              <button onClick={handleDownloadCertificate} className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+                <Download className="w-5 h-5" />
+                Download Certificate
+              </button>
+              <button className="flex-1 bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                <ExternalLink className="w-5 h-5" />
+                View on Blockchain
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+export default ViewCredit;

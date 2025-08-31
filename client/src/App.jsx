@@ -13,7 +13,6 @@ import Producer from './pages/Producer';
 import Authority from './pages/Authority';
 import Buyer from './pages/Buyer';
 import Explorer from './pages/Explorer';
-import Leaderboard from './pages/Leaderboard';
 
 // Producer-specific pages
 import Production from './pages/Production';
@@ -25,7 +24,6 @@ import Achievements from './pages/Achievements';
 // Certifier-specific pages
 import Verification from './pages/Verification';
 import Requests from './pages/Requests';
-import CertifierRequests from './pages/CertifierRequests';
 import FraudDetection from './pages/FraudDetection';
 import Reports from './pages/Reports';
 
@@ -104,11 +102,6 @@ function App() {
                 <Explorer />
               </ProtectedRoute>
             } />
-            <Route path="/leaderboard" element={
-              <ProtectedRoute>
-                <Leaderboard />
-              </ProtectedRoute>
-            } />
             
             {/* Producer-specific routes */}
             <Route path="/production" element={
@@ -146,11 +139,6 @@ function App() {
             <Route path="/requests" element={
               <ProtectedRoute>
                 <Requests />
-              </ProtectedRoute>
-            } />
-            <Route path="/certifier/requests" element={
-              <ProtectedRoute>
-                <CertifierRequests />
               </ProtectedRoute>
             } />
             <Route path="/fraud-detection" element={

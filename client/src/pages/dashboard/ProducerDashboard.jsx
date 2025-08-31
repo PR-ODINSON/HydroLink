@@ -41,18 +41,14 @@ const ProducerDashboard = () => {
           }
         }
 
-        // Fetch buyer notifications
-        const buyerRequestsResponse = await fetch('/api/buyer/notifications', {
+        // Fetch buyer purchase requests for producer's credits
+        const buyerRequestsResponse = await fetch('/api/producer/sales/pending', {
           credentials: 'include'
         });
         if (buyerRequestsResponse.ok) {
           const buyerRequestsData = await buyerRequestsResponse.json();
           if (buyerRequestsData.success) {
-            // Filter for purchase_requested notifications
-            const purchaseNotifications = (buyerRequestsData.data || []).filter(
-              n => n.type === 'purchase_requested'
-            );
-            setBuyerRequests(purchaseNotifications);
+            setBuyerRequests(buyerRequestsData.data || []);
           }
         }
 
@@ -112,6 +108,79 @@ const ProducerDashboard = () => {
     } catch (error) {
       console.error('Error submitting request:', error);
       throw error; // Re-throw to let the modal handle the error display
+    }
+  };
+
+  const handleAcceptSale = async (transactionId) => {
+    try {
+      const response = await fetch(`/api/producer/sales/${transactionId}/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to accept sale');
+      }
+
+      if (result.success) {
+        // Remove the accepted transaction from the list
+        setBuyerRequests(prev => prev.filter(t => t._id !== transactionId));
+        alert('Sale request accepted successfully! Credit has been transferred to the buyer.');
+      }
+    } catch (error) {
+      console.error('Error accepting sale:', error);
+      alert('Failed to accept sale: ' + error.message);
+    }
+  };
+
+  const handleRejectSale = async (transactionId) => {
+    try {
+      const reason = prompt('Please provide a reason for rejection:') || 'No reason provided';
+      
+      const response = await fetch(`/api/producer/sales/${transactionId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ reason })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to reject sale');
+      }
+
+      if (result.success) {
+        // Remove the rejected transaction from the list
+        setBuyerRequests(prev => prev.filter(t => t._id !== transactionId));
+        alert('Sale request rejected successfully.');
+      }
+    } catch (error) {
+      console.error('Error rejecting sale:', error);
+      alert('Failed to reject sale: ' + error.message);
+    }
+  };
+
+  const refreshBuyerRequests = async () => {
+    try {
+      const response = await fetch('/api/producer/sales/pending', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setBuyerRequests(data.data || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing buyer requests:', error);
     }
   };
 
@@ -269,12 +338,6 @@ const ProducerDashboard = () => {
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No requests yet</h3>
                     <p className="text-gray-600 mb-4">Submit your first credit request to get started</p>
-                    <button
-                      onClick={() => setIsModalOpen(true)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-                    >
-                      Submit Request
-                    </button>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -307,62 +370,97 @@ const ProducerDashboard = () => {
             {/* Buyer Requests Section */}
             <div className="bg-white rounded-lg shadow mb-8">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Buyer Requests</h2>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-medium text-gray-900">Buyer Purchase Requests</h2>
+                    <p className="text-sm text-gray-600 mt-1">Buyers requesting to purchase your credits</p>
+                  </div>
+                  <button
+                    onClick={refreshBuyerRequests}
+                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    ↻ Refresh
+                  </button>
+                </div>
               </div>
               <div className="p-6">
                 {buyerRequests.length === 0 ? (
                   <div className="text-center py-8">
                     <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No buyer requests yet</h3>
-                    <p className="text-gray-600">You will be notified here when buyers submit requests for your credits.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No pending purchase requests</h3>
+                    <p className="text-gray-600">When buyers want to purchase your credits, their requests will appear here for your approval.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {buyerRequests.slice(0, 5).map((buyerRequest) => (
-                      <div key={buyerRequest._id} className="p-4 bg-gray-50 rounded-lg shadow-sm">
-                        <div className="flex items-start">
-                          <div className="flex-shrink-0 mr-3">
-                            <Mail className="w-5 h-5 text-orange-500" />
-                          </div>
+                    {buyerRequests.slice(0, 5).map((transaction) => (
+                      <div key={transaction._id} className="p-4 bg-gray-50 rounded-lg shadow-sm border-l-4 border-blue-500">
+                        <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="text-sm font-semibold text-gray-900">
-                                {buyerRequest.metadata?.buyerName || 'Anonymous Buyer'}
-                              </p>
-                              <span className="text-sm text-gray-500">
-                                {formatTimeAgo(buyerRequest.createdAt)}
+                            <div className="flex items-center mb-2">
+                              <span className="text-sm font-semibold text-gray-900 mr-2">
+                                {transaction.buyer?.name || 'Anonymous Buyer'}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {transaction.buyer?.email}
                               </span>
                             </div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {buyerRequest.title}
-                            </p>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {buyerRequest.message}
-                            </p>
-                            {buyerRequest.metadata?.energyAmountMWh && (
-                              <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                ⚡ {buyerRequest.metadata.energyAmountMWh} MWh
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
+                              <div className="flex items-center">
+                                <span className="font-medium">Credit ID:</span>
+                                <span className="ml-2">{transaction.credit?.creditId || 'N/A'}</span>
                               </div>
-                            )}
-                            {buyerRequest.actionUrl && (
-                              <div className="mt-2">
-                                <a
-                                  href={buyerRequest.actionUrl}
-                                  className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200"
-                                >
-                                  {buyerRequest.actionText || 'View Details'}
-                                </a>
+                              <div className="flex items-center">
+                                <span className="font-medium">Energy:</span>
+                                <span className="ml-2">{transaction.credit?.energyAmountMWh} MWh</span>
                               </div>
-                            )}
-                          </div>
-                          {!buyerRequest.read && (
-                            <div className="flex-shrink-0 ml-2">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <div className="flex items-center">
+                                <span className="font-medium">Facility:</span>
+                                <span className="ml-2">{transaction.credit?.facilityName}</span>
+                              </div>
                             </div>
-                          )}
+                            
+                            <div className="text-sm text-gray-500">
+                              Requested: {formatTimeAgo(transaction.requestDate || transaction.createdAt)}
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col gap-2 ml-4">
+                            <div className="text-right text-sm text-gray-500">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                Pending Response
+                              </span>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleAcceptSale(transaction._id)}
+                                className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                              >
+                                Accept
+                              </button>
+                              <button
+                                onClick={() => handleRejectSale(transaction._id)}
+                                className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
+                    
+                    {buyerRequests.length > 5 && (
+                      <div className="text-center pt-4">
+                        <a
+                          href="/producer/sales"
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          View all {buyerRequests.length} requests →
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

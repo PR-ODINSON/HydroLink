@@ -18,6 +18,7 @@ import {
   Zap,
   Award
 } from 'lucide-react';
+import WalletBalance from './WalletBalance';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
@@ -29,8 +30,6 @@ const Sidebar = ({ isOpen, onClose }) => {
   const getMenuItems = (userRole) => {
     const commonItems = [
       { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', color: 'blue' },
-      { path: '/explorer', icon: Search, label: 'Explorer', color: 'cyan' },
-      { path: '/leaderboard', icon: Trophy, label: 'Leaderboard', color: 'yellow' },
     ];
 
     switch (userRole?.toLowerCase()) {
@@ -39,7 +38,6 @@ const Sidebar = ({ isOpen, onClose }) => {
           ...commonItems,
           { path: '/production', icon: Factory, label: 'Production', color: 'green' },
           { path: '/credits', icon: CreditCard, label: 'My Credits', color: 'green' },
-          { path: '/producer/requests', icon: FileText, label: 'My Requests', color: 'orange' },
           { path: '/analytics', icon: BarChart3, label: 'Analytics', color: 'blue' },
         ];
       
@@ -47,7 +45,6 @@ const Sidebar = ({ isOpen, onClose }) => {
       case 'authority':
         return [
           ...commonItems,
-          { path: '/certifier/requests', icon: FileText, label: 'Review Requests', color: 'orange' },
           { path: '/requests', icon: FileText, label: 'All Requests', color: 'orange' },
           { path: '/fraud-detection', icon: AlertTriangle, label: 'Fraud Detection', color: 'red' },
           { path: '/reports', icon: BarChart3, label: 'Reports', color: 'blue' },
@@ -127,6 +124,11 @@ const Sidebar = ({ isOpen, onClose }) => {
               })}
             </div>
           </nav>
+
+          {/* Wallet Balance - Bottom of Sidebar */}
+          <div className="px-3 pb-4">
+            <WalletBalance />
+          </div>
         </div>
       </div>
     </>
