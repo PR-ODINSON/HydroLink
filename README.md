@@ -14,8 +14,6 @@
   [![Ethereum](https://img.shields.io/badge/Blockchain-Polygon-purple.svg)](https://polygon.technology/)
   [![Vercel](https://img.shields.io/badge/Deployed-Vercel-black.svg)](https://vercel.com/)
   
-  [🚀 Live Demo](https://hydrolink-ten.vercel.app) • [📖 Documentation](#documentation) • [🛠️ API Reference](#api-reference) • [💬 Community](#support--community)
-  
 </div>
 
 ---
