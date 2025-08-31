@@ -3,6 +3,7 @@ const Request = require('../models/request.model');
 const Transaction = require('../models/transaction.model');
 const User = require('../models/user.model');
 const Notification = require('../models/notification.model');
+const Facility = require('../models/facility.model');
 
 // @desc    Request minting for a new credit
 // @route   POST /api/producer/credits
@@ -407,6 +408,97 @@ exports.updateWalletAddress = async (req, res) => {
       data: { walletAddress: user.walletAddress }
     });
   } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Get all facilities for the logged-in producer
+// @route   GET /api/producer/facilities
+exports.getProducerFacilities = async (req, res) => {
+  try {
+    const facilities = await Facility.findByOwner(req.user._id);
+    
+    res.status(200).json({ 
+      success: true, 
+      data: facilities,
+      count: facilities.length
+    });
+  } catch (error) {
+    console.error('Error fetching producer facilities:', error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Create a new facility for the logged-in producer
+// @route   POST /api/producer/facilities
+exports.createProducerFacility = async (req, res) => {
+  try {
+    const {
+      name,
+      location,
+      energySource,
+      capacity,
+      efficiency,
+      specifications,
+      environmentalData
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !location || !energySource || !capacity) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: name, location, energySource, and capacity are required'
+      });
+    }
+
+    // Create new facility
+    const newFacility = new Facility({
+      name,
+      owner: req.user._id,
+      location,
+      energySource,
+      capacity: parseFloat(capacity),
+      efficiency: efficiency ? parseFloat(efficiency) : 0,
+      specifications: specifications || {},
+      environmentalData: environmentalData || {},
+      status: 'Active'
+    });
+
+    const savedFacility = await newFacility.save();
+
+    // Create notification for certifiers about new facility
+    const certifiers = await User.find({ role: 'Certifier' });
+    if (certifiers.length > 0) {
+      await Notification.createRequestSubmittedNotification(
+        certifiers.map(c => c._id),
+        {
+          facilityId: savedFacility._id,
+          producerName: req.user.name,
+          facilityName: name,
+          energySource,
+          capacity
+        }
+      );
+    }
+
+    res.status(201).json({
+      success: true,
+      data: savedFacility,
+      message: 'Facility created successfully'
+    });
+  } catch (error) {
+    console.error('Error creating producer facility:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation Error',
+        errors: messages
+      });
+    }
+    
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };

@@ -12,7 +12,9 @@ const {
     getSaleHistory,
     getNotifications,
     markNotificationRead,
-    markAllNotificationsRead
+    markAllNotificationsRead,
+    getProducerFacilities,
+    createProducerFacility
 } = require('../controllers/producer.controller');
 
 const router = express.Router();
@@ -31,6 +33,11 @@ router.route('/credits')
 
 // Dashboard routes
 router.get('/dashboard', getDashboardStats);
+
+// Facilities routes
+router.route('/facilities')
+    .get(getProducerFacilities)
+    .post(createProducerFacility);
 
 // Sales routes
 router.get('/sales/pending', getPendingSaleRequests);

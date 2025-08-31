@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { 
   CreditCard, 
   Plus, 
@@ -23,7 +22,6 @@ const Credits = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showRequestModal, setShowRequestModal] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -114,11 +112,6 @@ const Credits = () => {
     });
   };
 
-  // Handle credit request (for producers)
-  const handleRequestCredit = () => {
-    setShowRequestModal(true);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50 flex items-center justify-center">
@@ -152,18 +145,6 @@ const Credits = () => {
                'Browse and purchase verified green energy credits'}
             </p>
           </div>
-          
-          {user?.role === 'Producer' && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              onClick={handleRequestCredit}
-              className="mt-4 sm:mt-0 bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              Request Credit
-            </motion.button>
-          )}
         </motion.div>
 
         {/* Error State */}
@@ -238,14 +219,6 @@ const Credits = () => {
                     ? 'No credits match your current filters.' 
                     : 'You don\'t have any credits yet.'}
                 </p>
-                {user?.role === 'Producer' && !searchTerm && filter === 'all' && (
-                  <button
-                    onClick={handleRequestCredit}
-                    className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors"
-                  >
-                    Request Your First Credit
-                  </button>
-                )}
               </motion.div>
             </div>
           ) : (

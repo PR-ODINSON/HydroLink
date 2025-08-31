@@ -53,29 +53,6 @@ const Production = () => {
       }
     } catch (error) {
       console.error('Error fetching facilities:', error);
-      // For demo purposes, set some mock data
-      setFacilities([
-        {
-          _id: '1',
-          name: 'Solar Plant Alpha',
-          energySource: 'Solar',
-          capacity: 150.5,
-          efficiency: 94.2,
-          status: 'Active',
-          location: { city: 'San Francisco', state: 'CA' },
-          operationalMetrics: { totalEnergyProduced: 2340 }
-        },
-        {
-          _id: '2',
-          name: 'Wind Farm Beta',
-          energySource: 'Wind',
-          capacity: 200.0,
-          efficiency: 89.7,
-          status: 'Active',
-          location: { city: 'Austin', state: 'TX' },
-          operationalMetrics: { totalEnergyProduced: 1850 }
-        }
-      ]);
     } finally {
       setLoading(false);
     }
