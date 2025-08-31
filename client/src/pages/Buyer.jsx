@@ -147,17 +147,7 @@ const Buyer = () => {
         const responseData = await response.json();
         setShowPurchaseModal(false);
         setSelectedCredit(null);
-        const successMessage = `
-🎉 Purchase request sent successfully!
-
-✅ The producer will receive:
-• Email notification  
-• In-app notification
-• Details about your request
-
-📱 You will be notified when they respond.
-`;
-        alert(successMessage);
+        alert('✅ REQUEST SENT! ✅');
         // Refresh the data to show any updates
         window.location.reload(); 
       } else {

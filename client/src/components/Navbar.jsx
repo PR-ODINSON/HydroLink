@@ -79,7 +79,10 @@ const Navbar = ({ onMenuClick }) => {
           if (response.ok) {
             const data = await response.json();
             const unreadCount = data.data?.filter(n => !n.read).length || 0;
+            console.log(`🔔 NAVBAR: Fetched ${data.data?.length || 0} notifications for ${user?.role}, ${unreadCount} unread`);
             setUnreadCount(unreadCount);
+          } else {
+            console.error('❌ NAVBAR: Failed to fetch notifications');
           }
         } catch (error) {
           console.error('Error fetching notification count:', error);

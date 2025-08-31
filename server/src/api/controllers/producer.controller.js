@@ -154,9 +154,23 @@ exports.getDashboardStats = async (req, res) => {
 exports.getNotifications = async (req, res) => {
   try {
     const notifications = await Notification.findForUser(req.user._id);
-    console.log(`Found ${notifications.length} notifications for producer ${req.user._id}`);
+    console.log(`🔔 Producer ${req.user.name} (${req.user._id}) checking notifications...`);
+    console.log(`📊 Found ${notifications.length} total notifications for producer`);
+    
+    // Log purchase request notifications specifically
+    const purchaseNotifications = notifications.filter(n => n.type === 'purchase_requested');
+    console.log(`🛒 Purchase request notifications: ${purchaseNotifications.length}`);
+    
+    if (purchaseNotifications.length > 0) {
+      console.log(`📋 Recent purchase requests:`);
+      purchaseNotifications.slice(0, 3).forEach(n => {
+        console.log(`  - ${n.title} | ${n.metadata?.buyerName} | ${new Date(n.createdAt).toLocaleString()}`);
+      });
+    }
+    
     res.status(200).json({ success: true, data: notifications });
   } catch (error) {
+    console.error('Error fetching producer notifications:', error);
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };
@@ -165,9 +179,19 @@ exports.getNotifications = async (req, res) => {
 // @route   GET /api/producer/sales/pending
 exports.getPendingSaleRequests = async (req, res) => {
   try {
+    console.log(`🛒 PRODUCER: Fetching pending sale requests for producer ${req.user?.name} (${req.user?._id})`);
+    console.log(`🛒 PRODUCER: Request headers:`, req.headers);
+    console.log(`🛒 PRODUCER: Request user:`, req.user);
+    
+    if (!req.user) {
+      console.error('❌ PRODUCER: No user found in request');
+      return res.status(401).json({ success: false, message: 'Not authorized, no user' });
+    }
+    
     // Find producer's credits
     const producerCredits = await Credit.find({ producer: req.user._id }, '_id');
     const creditIds = producerCredits.map(c => c._id);
+    console.log(`🛒 PRODUCER: Found ${creditIds.length} producer credits:`, creditIds);
     
     // Find pending requests for producer's credits
     const pendingRequests = await Transaction.find({ 
@@ -178,8 +202,20 @@ exports.getPendingSaleRequests = async (req, res) => {
     .populate('buyer', 'name email')
     .sort({ createdAt: -1 });
     
+    console.log(`🛒 PRODUCER: Found ${pendingRequests.length} pending sale requests`);
+    if (pendingRequests.length > 0) {
+      console.log('🛒 PENDING REQUESTS:', pendingRequests.map(r => ({
+        id: r._id,
+        buyer: r.buyer?.name,
+        credit: r.credit?.creditId,
+        status: r.status,
+        requestDate: r.requestDate
+      })));
+    }
+    
     res.status(200).json({ success: true, data: pendingRequests });
   } catch (error) {
+    console.error('❌ PRODUCER: Error fetching pending sale requests:', error);
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };

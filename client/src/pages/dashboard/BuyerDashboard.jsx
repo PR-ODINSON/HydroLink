@@ -90,6 +90,13 @@ const BuyerDashboard = () => {
 
     try {
       setPurchasing(true);
+      console.log('🛒 BUYER: Sending purchase request for credit:', selectedCredit._id);
+      console.log('🛒 BUYER: Credit details:', {
+        creditId: selectedCredit.creditId,
+        producer: selectedCredit.producer?.name,
+        energyAmount: selectedCredit.energyAmountMWh
+      });
+      
       const response = await fetch(`/api/buyer/credits/${selectedCredit._id}/purchase`, {
         method: 'POST',
         headers: {
@@ -100,21 +107,14 @@ const BuyerDashboard = () => {
 
       if (response.ok) {
         const result = await response.json();
+        console.log('✅ BUYER: Purchase request sent successfully!', result);
         setShowPurchaseModal(false);
         setSelectedCredit(null);
         
-        // Show success message with better formatting
-        const successMessage = `
-🎉 Purchase request sent successfully!
-
-✅ The producer will receive:
-• Email notification
-• In-app notification
-• Details about your request
-
-📱 You will be notified when they respond.
-`;
-        alert(successMessage);
+        // Show success message
+        alert('✅ REQUEST SENT! ✅');
+        
+        console.log('🔔 BUYER: Now the producer should see a notification in their dashboard!');
         
         // Refresh the data
         window.location.reload();
@@ -431,7 +431,7 @@ const BuyerDashboard = () => {
               >
                 {/* Sold Overlay */}
                 {credit.isSold && (
-                  <div className="absolute inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-10 rounded-xl">
+                  <div className="absolute inset-0 bg-[#ffff]/40 bg-opacity-50 flex items-center justify-center z-10 rounded-xl">
                     <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12">
                       SOLD OUT
                     </div>

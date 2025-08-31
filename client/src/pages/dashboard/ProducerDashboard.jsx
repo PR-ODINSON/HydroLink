@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, FileText, Clock, CheckCircle, XCircle, Loader2, AlertCircle, Bell } from 'lucide-react';
+import { PlusCircle, FileText, Clock, CheckCircle, XCircle, Loader2, AlertCircle, Bell, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import RequestCreditModal from '../../components/RequestCreditModal';
 
@@ -7,11 +7,12 @@ const ProducerDashboard = () => {
   const { user } = useAuth();
   const [requests, setRequests] = useState([]);
   const [credits, setCredits] = useState([]);
+  const [buyerRequests, setBuyerRequests] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch both requests and credits on component mount
+  // Fetch requests, credits, and buyer notifications on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -40,6 +41,20 @@ const ProducerDashboard = () => {
           }
         }
 
+        // Fetch buyer notifications
+        const buyerRequestsResponse = await fetch('/api/buyer/notifications', {
+          credentials: 'include'
+        });
+        if (buyerRequestsResponse.ok) {
+          const buyerRequestsData = await buyerRequestsResponse.json();
+          if (buyerRequestsData.success) {
+            // Filter for purchase_requested notifications
+            const purchaseNotifications = (buyerRequestsData.data || []).filter(
+              n => n.type === 'purchase_requested'
+            );
+            setBuyerRequests(purchaseNotifications);
+          }
+        }
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -106,7 +121,7 @@ const ProducerDashboard = () => {
       case 'Under Review': return <FileText className="w-4 h-4 text-blue-500" />;
       case 'Approved': return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'Rejected': return <XCircle className="w-4 h-4 text-red-500" />;
-      default: return <Clock className="w-4 h-4 text-gray-500" />;
+      default: return <Mail className="w-4 h-4 text-orange-500" />;
     }
   };
 
@@ -116,11 +131,20 @@ const ProducerDashboard = () => {
       case 'Under Review': return 'bg-blue-100 text-blue-800';
       case 'Approved': return 'bg-green-100 text-green-800';
       case 'Rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-orange-100 text-orange-800';
     }
   };
 
+  const formatTimeAgo = (dateString) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
 
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return `${Math.floor(diffInMinutes / 1440)}d ago`;
+  };
 
   if (!user) {
     return (
@@ -232,8 +256,6 @@ const ProducerDashboard = () => {
                   </div>
                 </div>
               </div>
-
-
             </div>
 
             {/* Recent Requests Section */}
@@ -274,6 +296,70 @@ const ProducerDashboard = () => {
                         </div>
                         <div className="text-sm text-gray-500">
                           {new Date(request.audit.submittedAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Buyer Requests Section */}
+            <div className="bg-white rounded-lg shadow mb-8">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900">Buyer Requests</h2>
+              </div>
+              <div className="p-6">
+                {buyerRequests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No buyer requests yet</h3>
+                    <p className="text-gray-600">You will be notified here when buyers submit requests for your credits.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {buyerRequests.slice(0, 5).map((buyerRequest) => (
+                      <div key={buyerRequest._id} className="p-4 bg-gray-50 rounded-lg shadow-sm">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0 mr-3">
+                            <Mail className="w-5 h-5 text-orange-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-sm font-semibold text-gray-900">
+                                {buyerRequest.metadata?.buyerName || 'Anonymous Buyer'}
+                              </p>
+                              <span className="text-sm text-gray-500">
+                                {formatTimeAgo(buyerRequest.createdAt)}
+                              </span>
+                            </div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {buyerRequest.title}
+                            </p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {buyerRequest.message}
+                            </p>
+                            {buyerRequest.metadata?.energyAmountMWh && (
+                              <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                ⚡ {buyerRequest.metadata.energyAmountMWh} MWh
+                              </div>
+                            )}
+                            {buyerRequest.actionUrl && (
+                              <div className="mt-2">
+                                <a
+                                  href={buyerRequest.actionUrl}
+                                  className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200"
+                                >
+                                  {buyerRequest.actionText || 'View Details'}
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                          {!buyerRequest.read && (
+                            <div className="flex-shrink-0 ml-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}

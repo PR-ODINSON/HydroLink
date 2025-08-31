@@ -50,6 +50,13 @@ const NotificationCenter = ({ isOpen, onClose }) => {
       const data = await response.json();
       
       if (data.success) {
+        console.log(`🔔 NOTIFICATION CENTER: Fetched ${data.data?.length || 0} notifications for ${user?.role} ${user?.name}`);
+        console.log('🔔 NOTIFICATIONS:', data.data);
+        
+        // Log purchase request notifications specifically
+        const purchaseNotifications = data.data?.filter(n => n.type === 'purchase_requested') || [];
+        console.log(`🛒 PURCHASE REQUEST NOTIFICATIONS: ${purchaseNotifications.length}`);
+        
         setNotifications(data.data || []);
         setUnreadCount(data.data.filter(n => !n.read).length);
       } else {

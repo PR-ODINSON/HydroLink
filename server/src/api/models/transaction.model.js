@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const TransactionSchema = new mongoose.Schema({
+  // Unique transaction ID
+  transactionId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   // The credit being sold
   credit: {
     type: mongoose.Schema.Types.ObjectId,
@@ -34,6 +40,16 @@ const TransactionSchema = new mongoose.Schema({
   }
 }, { 
   timestamps: true
+});
+
+// Pre-save middleware to generate transaction ID
+TransactionSchema.pre('save', function(next) {
+  if (!this.transactionId) {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 5).toUpperCase();
+    this.transactionId = `TXN-${timestamp}-${random}`;
+  }
+  next();
 });
 
 // Static methods

@@ -377,44 +377,59 @@ exports.purchaseCredit = async (req, res) => {
         await purchaseRequest.save();
 
         // Send in-app notification to producer
-        await Notification.create({
+        console.log(`🔔 Creating notification for producer ${credit.producer._id} about purchase request from buyer ${req.user.name} (${req.user.role})`);
+        const notification = await Notification.create({
             user: credit.producer._id,
-            title: '🛒 New Purchase Request!',
-            message: `${req.user.name} wants to purchase your hydrogen credit "${credit.creditId}" (${credit.energyAmountMWh} MWh from ${credit.facilityName}).`,
+            title: '🛒 New Purchase Request from Buyer!',
+            message: `BUYER "${req.user.name}" (${req.user.role}) wants to purchase your hydrogen credit "${credit.creditId}" - ${credit.energyAmountMWh} MWh from ${credit.facilityName}. Click to approve or reject this request.`,
             type: 'purchase_requested',
             priority: 'high',
             relatedModel: 'Transaction',
             relatedId: purchaseRequest._id,
             actionUrl: `/dashboard/producer/requests`,
-            actionText: 'View Request',
+            actionText: 'View & Respond',
             metadata: {
                 buyerName: req.user.name,
                 buyerEmail: req.user.email,
+                buyerRole: req.user.role,
+                buyerId: req.user._id,
                 creditId: credit.creditId,
                 energyAmount: credit.energyAmountMWh,
+                energyAmountMWh: credit.energyAmountMWh,
                 facilityName: credit.facilityName,
+                energySource: credit.energySource,
                 requestDate: new Date(),
-                requestId: purchaseRequest._id
+                requestId: purchaseRequest._id,
+                transactionId: purchaseRequest._id
             }
         });
+        console.log(`✅ Notification created successfully with ID: ${notification._id}`);
 
         // Send email notification to producer
         console.log(`📧 EMAIL NOTIFICATION TO PRODUCER:`);
         console.log(`To: ${credit.producer.email}`);
         console.log(`Subject: 🛒 New Purchase Request for Your Hydrogen Credit ${credit.creditId}`);
         console.log(`Message: Dear ${credit.producer.name},`);
-        console.log(`${req.user.name} (${req.user.email}) has requested to purchase your hydrogen credit:`);
-        console.log(`Credit ID: ${credit.creditId}`);
-        console.log(`Energy Amount: ${credit.energyAmountMWh} MWh`);
-        console.log(`Facility: ${credit.facilityName}`);
-        console.log(`Request Date: ${new Date().toLocaleString()}`);
-        console.log(`Please log in to your producer dashboard to approve or reject this request.`);
+        console.log(`BUYER "${req.user.name}" (Role: ${req.user.role}) has requested to purchase your hydrogen credit:`);
+        console.log(`• Buyer Email: ${req.user.email}`);
+        console.log(`• Credit ID: ${credit.creditId}`);
+        console.log(`• Energy Amount: ${credit.energyAmountMWh} MWh`);
+        console.log(`• Facility: ${credit.facilityName}`);
+        console.log(`• Request Date: ${new Date().toLocaleString()}`);
+        console.log(`📱 Please log in to your producer dashboard to approve or reject this request.`);
+        console.log(`🔗 Dashboard: /dashboard/producer/requests`);
         console.log(`---`);
+
+        console.log(`✅ BUYER CONTROLLER: Purchase request created successfully`);
+        console.log(`📊 Transaction ID: ${purchaseRequest._id}`);
+        console.log(`👤 Buyer: ${req.user.name} (${req.user._id})`);
+        console.log(`🏭 Producer: ${credit.producer.name} (${credit.producer._id})`);
+        console.log(`💰 Credit: ${credit.creditId} (${credit.energyAmountMWh} MWh)`);
 
         res.status(201).json({
             success: true,
             message: 'Purchase request sent to producer! They will receive an email and in-app notification.',
-            data: { 
+            data: {
                 purchaseRequest,
                 credit: {
                     creditId: credit.creditId,
