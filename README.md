@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/lucide-react/lucide/main/icons/leaf.svg" alt="HydroLink Logo" width="80" height="80">
   
   # 🌱 HydroLink
   
