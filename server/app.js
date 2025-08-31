@@ -20,40 +20,19 @@ const app = express();
 // Connect to database
 connectDB();
 
-// ---------- CORS CONFIG ----------
-const allowedOrigins = [
-  process.env.CLIENT_URL, // e.g. "https://hydrolink.vercel.app"
-  'http://localhost:3000' // for local dev
-].filter(Boolean); // remove undefined
-
-console.log(process.env.CLIENT_URL);
-
-app.use((req, res, next) => {
-  res.header('Vary', 'Origin'); // prevent cache poisoning
-  next();
-});
-
+// Middlewares
 app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (like curl/Postman) or from allowedOrigins
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Not allowed by CORS: ${origin}`));
-    }
-  },
-  credentials: true, // allow cookies/Authorization headers
+  origin: process.env.CLIENT_URL || '*',
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+})); // Enable Cross-Origin Resource Sharing
+app.use(express.json()); // To parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
+app.use(cookieParser()); // To parse cookies
+app.use(morgan('dev')); // Logger for development
 
-// ---------- MIDDLEWARE ----------
-app.use(express.json()); // parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // parse URL-encoded
-app.use(cookieParser()); // parse cookies
-app.use(morgan('dev')); // logger
-
-// ---------- ROUTES ----------
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/producer', producerRoutes);
 app.use('/api/certifier', certifierRoutes);
@@ -61,13 +40,10 @@ app.use('/api/buyer', buyerRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/blockchain', blockchainRoutes);
 
-// Health check route
+// Simple root route for health check
 app.get('/', (req, res) => {
   res.send('Blockchain Green Hydrogen Credit System API is running...');
 });
 
-// Handle OPTIONS preflight globally
-app.options('*', cors());
-
-// ---------- EXPORT ----------
+// Export the app object to be used by server.js
 module.exports = app;
