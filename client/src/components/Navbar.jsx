@@ -142,17 +142,6 @@ const Navbar = ({ onMenuClick }) => {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link
-              to="/"
-              className={`text-sm font-medium transition-colors ${
-                isActive('/') 
-                  ? 'text-green-600 border-b-2 border-green-600' 
-                  : 'text-gray-600 hover:text-green-600'
-              }`}
-            >
-              Home
-            </Link>
-            {/* Landing page navigation links - only show on home page */}
             {isActive('/') && (
               <>
                 <button
@@ -203,40 +192,6 @@ const Navbar = ({ onMenuClick }) => {
               </>
             )}
             {/* Dashboard navigation links - only show when authenticated AND NOT on landing page */}
-            {isAuthenticated && !isActive('/') && (
-              <>
-                <Link
-                  to="/dashboard"
-                  className={`text-sm font-medium transition-colors ${
-                    isActive('/dashboard') 
-                      ? 'text-green-600 border-b-2 border-green-600' 
-                      : 'text-gray-600 hover:text-green-600'
-                  }`}
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/explorer"
-                  className={`text-sm font-medium transition-colors ${
-                    isActive('/explorer') 
-                      ? 'text-green-600 border-b-2 border-green-600' 
-                      : 'text-gray-600 hover:text-green-600'
-                  }`}
-                >
-                  Explorer
-                </Link>
-                <Link
-                  to="/leaderboard"
-                  className={`text-sm font-medium transition-colors ${
-                    isActive('/leaderboard') 
-                      ? 'text-green-600 border-b-2 border-green-600' 
-                      : 'text-gray-600 hover:text-green-600'
-                  }`}
-                >
-                  Leaderboard
-                </Link>
-              </>
-            )}
           </div>
 
           {/* Right side actions */}
