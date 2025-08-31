@@ -1,9 +1,26 @@
 {
-  "installCommand": "cd client && npm ci",
-  "rewrites": [
+  "version": 2,
+  "name": "hydrolink",
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "client/dist"
+      }
     }
-  ]
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/dist/index.html"
+    }
+  ],
+  "outputDirectory": "client/dist",
+  "buildCommand": "cd client && npm run build",
+  "installCommand": "cd client && npm install",
+  "framework": null
 }

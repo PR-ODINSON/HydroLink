@@ -6,7 +6,9 @@
     "build": "cd client && npm run build",
     "dev": "cd client && npm run dev",
     "preview": "cd client && npm run preview",
-    "install:client": "cd client && npm install"
+    "install:client": "cd client && npm install",
+    "vercel-build": "cd client && npm install && npm run build",
+    "start": "cd client && npm run preview"
   },
   "workspaces": [
     "client"

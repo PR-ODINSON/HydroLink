@@ -666,9 +666,9 @@ Once all services are running:
    vercel login
    
    # Deploy from client directory
-   cd client
-   vercel --prod
-   ```
+cd client
+vercel --prod
+```
 
 2. **Configure Environment Variables in Vercel Dashboard**
    ```env

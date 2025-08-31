@@ -7,7 +7,8 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false, // Disable sourcemaps for production
+    minify: 'terser',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -17,8 +18,13 @@ export default defineConfig({
           charts: ['recharts']
         }
       }
-    }
+    },
+    // Optimize for production
+    chunkSizeWarningLimit: 1000,
+    target: 'esnext'
   },
+  // Environment variable prefix for client-side
+  envPrefix: 'VITE_',
   server: {
     port: 5173,
     host: true,
